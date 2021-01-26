@@ -1,4 +1,7 @@
 #[allow(dead_code)]
+extern crate ndarray;
+//use ndarray::prelude::*;
+
 use crate::particle;
 use crate::parameters;
 use std::collections::BinaryHeap;
@@ -8,10 +11,10 @@ use std::cmp::{Ordering, Eq};
 pub struct Collision
 {
     time: f64,
-    particle_1: particle::Particle,
-    particle_2: particle::Particle, // Negative values imply that particle_2 is really a wall
-                                    // this is interpreted in resolve_collision(), and
-                                    // the value is set when the collision is enqueued.
+    particle_1: i8, 
+    particle_2: i8, // Negative values imply that particle_2 is really a wall
+                    // this is interpreted in resolve_collision(), and
+                    // the value is set when the collision is enqueued.
 
     collision_count_1: u8,  // Collision count at the time the collision
     collision_count_2: u8,  // was detected. When it is resolved, compare
@@ -29,47 +32,49 @@ impl CollisionQueue
 {
     // Iterates through all existing particles, and
     // adds all expected collisions to CollisionQueue.
-    fn search_for_collisions(&self, particles: Vec<particle::Particle>)
+    fn search_for_collisions(&self, particles: particle::Particles)
     {
-        let horizontal_wall: Particle = Particle{ pos: Point{-2., 0.}, 0};
-        let vertical_wall: Particle = Particle{0., -2., 0};
-        for p in particles.iter()
+        /*
+        for p in 0..parameters::N
         {
-            let t = p.wall_collition_time(p.pos.x, p.vel.x, p.r);
             let collision = Collision 
             { 
                 time: t, 
-                particle_1: p, 
+                particle_1: 2,
                 particle_2: wall, 
                 p.collision_count 
             };
             self.push(collision);
         }
+        */
     }
-    // Adjust the velocities of the particles involved in the collision.
+
+    // Transform the velocities of the particles involved in the collision.
     fn resolve_collision(collision: &mut Collision)
     {
-        // particle_2 is either a particle or a wall, depending on wether
-        // the value of its position is valid (positive) or not (negative).
-        // TODO: Consider changing this method. 
-        // Making Particle a struct of arrays would probably allow using 
-        // None or some other type for the walls in particle_2[]. 
+        // particle_2 is either a particle or a wall.
+        // a positive index means particle, a negative means wall
 
-        if collision.particle_2.pos.x < -1.
+        if collision.particle_2 == -1
         {
             // Collide with horizontal wall
+            /*
             collision.particle_1.vel.x *= parameters::XI;
             collision.particle_1.vel.y *= - parameters::XI;
+            */
         }
-        if collision.particle_2.pos.y < -1.
+        if collision.particle_2 == -2
         {
             // Collide with vertical wall
+            /*
             collision.particle_1.vel.x *= - parameters::XI;
             collision.particle_1.vel.y *= parameters::XI;
+            */
         }
         else
         {
             // Make sure particles are within the valid area.
+            /*
             assert!(collision.particle_1.pos.x > parameters::X_MIN && 
                     collision.particle_1.pos.x < parameters::X_MAX);
             assert!(collision.particle_1.pos.y > parameters::Y_MIN && 
@@ -78,6 +83,7 @@ impl CollisionQueue
                     collision.particle_2.pos.x < parameters::X_MAX);
             assert!(collision.particle_2.pos.y > parameters::Y_MIN && 
                     collision.particle_1.pos.y < parameters::Y_MAX);
+            */
 
             // Collide two particles.
             println!("This has not been implemented yet.");
