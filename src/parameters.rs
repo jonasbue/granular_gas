@@ -6,4 +6,5 @@ pub const Y_MAX: f64 = 1.;
 
 pub const XI: f64 = 1.; // The impact parameter.
                         // Not to be confused with the common variable name x_i
-pub const N: u8 = 1;
+pub const N: usize = 1000;
+pub const R: f64 = 0.1;

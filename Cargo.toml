@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 ndarray = "0.14.0"
+ndarray-rand = "0.13.0"
+gnuplot = "0.0.37"

@@ -1,6 +1,7 @@
 #[allow(dead_code)]
 extern crate ndarray;
 use ndarray::prelude::*;
+use ndarray_rand::{rand_distr::Uniform, RandomExt};
 
 use crate::parameters;
 
@@ -22,7 +23,7 @@ pub struct Particles
     pub vel: Array2<f64>,
     pub r: Array1<f64>,
     pub m: Array1<f64>,
-    pub collision_count: Array1<i8> // Number of times each particle has collided
+    pub collision_count: Array1<u8> // Number of times each particle has collided
 }
 
 //impl Eq for Particle {}
@@ -130,6 +131,17 @@ struct ParticleVec
 }
 */
 
+pub fn generate_particles(n: usize, x_min: f64, x_max: f64, y_min: f64, y_max: f64) -> Particles
+{
+    let particles = Particles { 
+        pos: Array2::random((2, n), Uniform::new(x_min, x_max)),
+        vel: Array2::ones((2, n)), //TODO: Add some random velocities
+        r: Array1::ones(n),
+        m: Array1::ones(n),
+        collision_count: Array1::zeros(n),
+    };
+    return particles;
+}
 
 
 fn wall_collition_time(pos: f64, v: f64, radius: f64) -> f64

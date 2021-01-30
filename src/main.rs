@@ -2,9 +2,11 @@
 mod particle;
 mod collisions;
 mod parameters;
+mod tests;
+mod plotting;
 
 fn main() 
 {
-    println!("Hello, world!");
+    tests::test_main();
 }
 
