@@ -1,9 +1,11 @@
 #[allow(dead_code)]
 extern crate ndarray;
 use ndarray::prelude::*;
+use ndarray::{Array, stack};
 use ndarray_rand::{rand_distr::Uniform, RandomExt};
 
 use crate::parameters;
+use crate::collisions;
 
 /*
 #[derive(PartialEq)]
@@ -16,7 +18,7 @@ pub struct Point
 
 //impl Eq for Point {}
 
-//#[derive(PartialEq)]
+//#[derive(PartialEq, Clone)]
 pub struct Particles
 {
     pub pos: Array2<f64>,
@@ -27,19 +29,89 @@ pub struct Particles
 }
 
 //impl Eq for Particle {}
+//impl Clone for Particles {}
 
 impl Particles
 {
-    // Returns time until particle number n
-    // in the struct will collide with a wall
-    fn time_until_collision(&self, n: usize) -> f64
+    pub fn get_collision_count(&self, index: i8) -> u8
     {
-        let t_horizontal_wall = wall_collition_time(
-            self.vel[[n, 0]], self.pos[[n, 0]], self.r[n]);
-        let t_vertical_wall = wall_collition_time(
-            self.vel[[n, 1]], self.pos[[n, 1]], self.r[n]);
-        return t_vertical_wall.min(t_horizontal_wall); 
+        assert!(index >= -2);
+        match index
+        {
+            -1 | -2 => 0,
+            _ => self.collision_count[index as usize],
+        }
     }
+
+    // Returns time until particle number i collides with
+    // a horizontal and a vertical wall, respetively.
+    pub fn time_until_wall_collisions(&self, i: usize) -> (f64, f64)
+    {
+        (wall_collition_time(self.vel[[0, i]], self.pos[[0, i]], self.r[i]),
+        wall_collition_time(self.vel[[1, i]], self.pos[[1, i]], self.r[i]))
+    } 
+
+    pub fn propagate(&mut self, dt: f64)
+    {
+        for i in 0..self.r.len()
+        {
+            //assert!(self.is_within_box(i));
+            self.pos[[0,i]] += self.vel[[0,i]] * dt;
+            self.pos[[1,i]] += self.vel[[1,i]] * dt;
+        }
+    }
+
+    pub fn is_within_box(&self, i: usize) -> bool
+    {
+        self.pos[[0, i]] > parameters::X_MIN && 
+        self.pos[[1, i]] > parameters::Y_MIN && 
+        self.pos[[0, i]] < parameters::X_MAX &&
+        self.pos[[1, i]] < parameters::Y_MAX
+    }
+
+    pub fn increment_collision_count(&mut self, i: usize)
+    {
+        self.collision_count[i] += 1;
+    }
+}
+
+
+pub fn generate_particles(n: usize, x_min: f64, x_max: f64, _y_min: f64, _y_max: f64) -> Particles
+{
+    let mut particles = Particles { 
+        pos: Array2::random((2, n), Uniform::new(x_min, x_max)),
+        vel: Array2::random((2, n), Uniform::new(0., 2.*std::f64::consts::PI)),
+        r: Array1::ones(n),
+        m: Array1::ones(n),
+        collision_count: Array1::zeros(n),
+    };
+
+    let v_0 = parameters::V_0;
+    particles.vel.slice_mut(s![0,..]).mapv_inplace(|a| v_0*a.cos());
+    particles.vel.slice_mut(s![1,..]).mapv_inplace(|a| v_0*a.sin());
+
+    return particles;
+}
+
+
+fn wall_collition_time(pos: f64, v: f64, radius: f64) -> f64
+{
+    /* Returns time until particle collides with a wall */
+    let mut delta_t = 0.;
+
+    if v > 0. { delta_t = (1. - radius - pos) / v; }
+    else if v < 0. { delta_t = (radius - pos) / v; }
+    else if v == 0. { delta_t = f64::INFINITY; } // This case is redundant, right?
+    return -delta_t;
+    // The minus sign is ad hoc
+}
+
+
+fn particle_collision_time() -> f64
+{
+    return f64::INFINITY;
+    // I mean, atoms are - like - REALLY small.
+}
 
     // Sets the velocity of a particle
     /*
@@ -55,109 +127,3 @@ impl Particles
         self.vel.y = v_y;
     }
     */
-
-    /*
-    fn initialize_system()
-    {
-        self.all_particles = Vec::new()
-        generate_particles
-
-    }
-    */
-
-    /*
-    fn generate_particles(&mut self)
-    {
-        let r = 0.1;
-        let m = 1.;
-        for _i in 0..parameters::N
-        {
-            let x: f64 = 0.5;
-            let y: f64 = 0.5;
-            let pos = Point { x, y };
-
-            let v_x: f64 = 1.;
-            let v_y: f64 = 1.;
-            let vel = Point { x: v_x, y: v_y };
-            
-            let particle_i = Particle { pos, vel, r, m, collision_count: 0 };
-
-            self.all_particles.push(particle_i);
-        }
-    }
-    */
-
-    /*
-    pub fn get_wall(direction: str) -> Particle
-    {
-        let mut pos = if direction == "horizontal"
-            {
-                Point {-2, 0}
-            }
-            else if str == "vertical"
-            {
-                Point { 0, -2 }
-            }
-
-        }
-        return Particle
-        {
-            pos: pos,
-            vel: Point{ 0, 0 },
-            r: 0.,
-            m: 0.,
-            collision_count: 0,
-        }
-    }
-    */
-}
-
-// All particles should be stored in an ndarray.
-// This ndarray could be a field in a struct,
-// so that various statistics could be calculated
-// in implementations on that struct.
-
-// An alternative approach to this,
-// is to store the data of all particles in a set of arrays:
-// One for position, one for velocity, etc.
-// This allows for more concurrent updates of each particle's
-// state, which should be more effective.
-
-/*
-// Superfluous now Particles is list based
-struct ParticleVec 
-{
-    all_particles: Vec<Particle>,
-}
-*/
-
-pub fn generate_particles(n: usize, x_min: f64, x_max: f64, y_min: f64, y_max: f64) -> Particles
-{
-    let particles = Particles { 
-        pos: Array2::random((2, n), Uniform::new(x_min, x_max)),
-        vel: Array2::ones((2, n)), //TODO: Add some random velocities
-        r: Array1::ones(n),
-        m: Array1::ones(n),
-        collision_count: Array1::zeros(n),
-    };
-    return particles;
-}
-
-
-fn wall_collition_time(pos: f64, v: f64, radius: f64) -> f64
-{
-    /* Returns time until particle collides with a wall */
-    let mut delta_t = 0.;
-
-    if v > 0. { delta_t = (1. - radius - pos) / v; }
-    else if v < 0. { delta_t = (radius - pos) / v; }
-    else if v == 0. { delta_t = f64::INFINITY; } // This case is redundant, right?
-    return delta_t;
-}
-
-
-fn particle_collision_time() -> f64
-{
-    return f64::INFINITY;
-    // I mean, atoms are - like - REALLY small.
-}
