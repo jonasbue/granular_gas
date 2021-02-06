@@ -1,4 +1,4 @@
-use gnuplot::{Figure, Color, BorderLocation2D};
+use gnuplot::{Figure, Color};
 //use gnuplot::linestyle; 
 use gnuplot::*;
 use crate::particle;
@@ -10,21 +10,27 @@ use ndarray::s;
 pub fn plot_positions(particles: &particle::Particles)
 {
     let mut fig = Figure::new();
+    //let mut dv = particles.pos;
+    //dv = dv.slice_mut(s![0,..]) + particles.vel.slice_mut(s![0,..]);
+    //dv = dv.slice_mut(s![1,..]) + particles.vel.slice_mut(s![1,..]);
+
+
     //let dt = 1.;
     fig.axes2d()
         .points(
             particles.pos.slice(s![0,..]), 
             particles.pos.slice(s![1,..]), 
             &[Color("black"), 
-            PointSize(parameters::R * 15.),
-            PointSymbol('O'),
+            PointSize(parameters::R * 140.),// 140 is a scaling factor 
+            PointSymbol('O'),               // set by hand to give the
+                                            // particles the right size.
         ])
         .set_x_range(Fix(parameters::X_MIN), Fix(parameters::X_MAX))
         .set_y_range(Fix(parameters::Y_MIN), Fix(parameters::Y_MAX));
         /*
         .points(
-            &particles.pos.slice(s![0,..]) + &particles.vel.slice(s![0,..]), 
-            &particles.pos.slice(s![1,..]) + &particles.vel.slice(s![1,..]), 
+            dv.slice(s![0,..]),
+            dv.slice(s![1,..]),
             &[Color("black"), 
             PointSize(parameters::R * 100. / parameters::N as f64),
             PointSymbol('O'),

@@ -1,10 +1,9 @@
 #[allow(dead_code)]
 extern crate ndarray;
-//use ndarray::prelude::*;
 
 use crate::particle;
 use crate::parameters;
-use crate::tests;
+
 use std::collections::BinaryHeap;
 use std::cmp::{Ordering, Eq};
 
@@ -49,7 +48,8 @@ impl Collision
         assert!(self.particle_1_index >= 0);
         let p_1 = self.particle_1_index as usize;
 
-        if self.collision_count_1 != particles.get_collision_count(p_1 as i8)
+        if self.collision_count_1 
+            == particles.get_collision_count(p_1 as i8)
         {
             // Collide with horizontal wall
             if self.particle_2_index == -1
@@ -71,7 +71,8 @@ impl Collision
                 let p_2 = self.particle_2_index as usize;
 
                 assert!(p_2 != p_1);
-                if particles.get_collision_count(p_1 as i8) == particles.get_collision_count(p_2 as i8)
+                if particles.get_collision_count(p_1 as i8) 
+                    == particles.get_collision_count(p_2 as i8)
                 {
                     particles.increment_collision_count(p_2);
                     unimplemented!();
@@ -96,10 +97,12 @@ impl CollisionQueue
         CollisionQueue { heap: BinaryHeap::new() }
     }
 
+    /*
     pub fn get_len(&self) -> usize
     {
         self.heap.len()
     }
+    */
 
     pub fn get_next(&self) -> &Collision
     {
@@ -120,57 +123,80 @@ impl CollisionQueue
         self.heap.push(c);
     }
 
+    // Returns an unmutable reference to the unsorted heap queue
+    pub fn get_heap(&self) -> &BinaryHeap<Collision>
+    {
+        &self.heap
+    }
 
     // Iterates through all existing particles, and
     // adds all expected collisions to CollisionQueue.
     pub fn fill_collision_queue(&mut self, particles: &particle::Particles)
     {
-        for i in 0..particles.r.len()
+        for i in 0..particles.get_len()
         {
-            let (c_horizontal, c_vertical, c_particle) = find_new_collisions(particles, i as i8);
+            let (c_horizontal, c_vertical, c_particle)
+                = find_new_collisions(particles, i as i8);
 
             self.push_collision(c_horizontal);
             self.push_collision(c_vertical);
-            //self.push_collision(c_particle);
-
-            // Iterate over all other particles, searching for a collition:
-            //for n in i..particles.r.len()
-            //let collision_count_2 = particles.get_collision_count(n);
-            //let c = make_collision(t, i, n, collision_count_1, collision_count_2);
+            self.push_collision(c_particle);
         }
     }
 
-    pub fn resolve_next_collision(&mut self, particles: &mut particle::Particles)
+    pub fn resolve_next_collision(
+        &mut self, mut particles: &mut particle::Particles)
     {
         let c = self.get_next();
-        c.resolve_collision(particles);
+        c.resolve_collision(&mut particles);
 
-        let (c_new_h, c_new_v, c_new_p) = find_new_collisions(particles, c.particle_1_index);
-        self.push_collision(c_new_h);
-        self.push_collision(c_new_v);
-        self.push_collision(c_new_p);
+        let (c_new_h, c_new_v, c_new_p) 
+            = find_new_collisions(particles, c.particle_1_index);
+
+        // TODO: FInd a better way to do this. It doesn't work properly.
+        if c_new_h.get_time() > 1e-5
+        {
+            self.push_collision(c_new_h);
+        }
+        if c_new_v.get_time() > 1e-5
+        {
+            self.push_collision(c_new_v);
+        }
+        if c_new_p.get_time() > 1e-5
+        {
+            self.push_collision(c_new_p);
+        }
     }
 }
 
-pub fn find_new_collisions(particles: &particle::Particles, i: i8) -> (Collision, Collision, Collision)
+
+pub fn find_new_collisions(particles: &particle::Particles, i: i8) 
+    -> (Collision, Collision, Collision)
 {
     assert!(i >= 0);
     let collision_count_1 = particles.get_collision_count(i);
 
-    let (t_h, t_v) = particles.time_until_wall_collisions(i as usize);
-    let c_horizontal = make_collision(t_h, i as usize, -1, collision_count_1, 0);
-    let c_vertical = make_collision(t_v, i as usize, -2, collision_count_1, 0);
-    let c_particle = make_collision(t_v+1000., i as usize, -2, collision_count_1, 0);
+    let (t_h, n_h) 
+        = particles.time_until_next_collisions(i as usize, "horizontal");
+    let c_horizontal 
+        = make_collision(t_h, i as usize, n_h, collision_count_1, 0);
 
-    // Iterate over all other particles, searching for a collition:
-    //for n in i..particles.r.len()
-    //let collision_count_2 = particles.get_collision_count(n);
-    //let c = make_collision(t, i, n, collision_count_1, collision_count_2);
-    //self.push_collision(c);
+    let (t_v, n_v) 
+        = particles.time_until_next_collisions(i as usize, "vertical");
+    let c_vertical 
+        = make_collision(t_v, i as usize, n_v, collision_count_1, 0);
+
+    let (t_p, n_p)
+        = particles.time_until_next_collisions(i as usize, "particle");
+    let c_particle 
+        = make_collision(t_p, i as usize, n_p, collision_count_1, 0);
+
     return (c_horizontal, c_vertical, c_particle);
 }
 
-pub fn make_collision(t: f64, p_1: usize, p_2: i8, cc_1: u8, cc_2: u8) -> Collision
+
+pub fn make_collision(t: f64, p_1: usize, p_2: i8, cc_1: u8, cc_2: u8) 
+    -> Collision
 {
     assert!(p_2 >= -2);
     Collision 
@@ -195,13 +221,14 @@ impl PartialOrd for Collision
     }
 }
 
+
 // Ord sorts collisions in the heap queue.
 impl Ord for Collision
 {
     fn cmp(&self, other: &Self) -> Ordering
     {
         // Only the time parameter is a reasonable sorting criterium.
-        //other.time.cmp(&self.time).unwrap(); // Rust docs solution
+        // other.time.cmp(&self.time).unwrap(); // Rust docs solution
         return self.partial_cmp(other).unwrap(); //Stackoverflow solution
     }
 }
