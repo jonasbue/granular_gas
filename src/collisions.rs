@@ -13,7 +13,7 @@ pub struct Collision
     time: f64,
     particle_1_index: i8, 
     particle_2_index: i8, // Negative values imply that particle_2 is really a wall
-                    // this is interpreted in resolve_collision(), and
+                    // this is interpreted in transform_velocity(), and
                     // the value is set when the collision is enqueued.
 
     collision_count_1: u8,  // Collision count at the time the collision
@@ -38,47 +38,66 @@ impl Collision
         self.particle_2_index
     }
 
+    pub fn get_collision_count(&self, i: i8) -> u8
+    {
+        match i
+        {
+            1 => self.collision_count_1,
+            2 => self.collision_count_2,
+            _ => panic!("Only 1 and 2 are valid indices \
+                            of particles in a collision"),
+        }
+    }
+
     // Transform the velocities of the particles involved in the collision.
-    pub fn resolve_collision(&self, particles: &mut particle::Particles)
+    pub fn transform_velocity(&self, particles: &mut particle::Particles)
     {
         // particle_2 is either a particle or a wall.
         // a positive index means particle, a negative means wall
 
         // Particle_1 must have a nonnegative index.
-        assert!(self.particle_1_index >= 0);
-        let p_1 = self.particle_1_index as usize;
+        assert!(self.get_particle_1() >= 0);
+        assert!(self.get_particle_2() >= -2);
+
+        let p_1 = self.get_particle_1() as usize;
+        let p_2 = self.get_particle_2() as i8;
+        println!("P_1 = {}, P_2 = {}", p_1, p_2);
 
         if self.collision_count_1 
             == particles.get_collision_count(p_1 as i8)
         {
             // Collide with horizontal wall
-            if self.particle_2_index == -1
+            if p_2 == -1
             {
-                particles.vel[[0, p_1]] *= - parameters::XI;
-                particles.vel[[1, p_1]] *= parameters::XI;
-            }
-
-            // Collide with vertical wall
-            else if self.particle_2_index == -2
-            {
+                println!("Horizontal wall transform complete");
                 particles.vel[[0, p_1]] *= parameters::XI;
                 particles.vel[[1, p_1]] *= - parameters::XI;
             }
+            // Collide with vertical wall
+            else if p_2 == -2
+            {
+                println!("Vertical wall transform complete");
+                particles.vel[[0, p_1]] *= - parameters::XI;
+                particles.vel[[1, p_1]] *= parameters::XI;
+            }
+            // Collide with a particle.
             else
             {
-                // Collide two particles.
-                assert!(self.particle_2_index >= 0);
-                let p_2 = self.particle_2_index as usize;
-
-                assert!(p_2 != p_1);
+                assert!(p_2 != p_1 as i8);
                 if particles.get_collision_count(p_1 as i8) 
-                    == particles.get_collision_count(p_2 as i8)
+                    == particles.get_collision_count(p_2)
                 {
-                    particles.increment_collision_count(p_2);
+                    particles.increment_collision_count(p_2 as usize);
                     unimplemented!();
                 }
             }
             particles.increment_collision_count(p_1);
+        }
+        else
+        {
+            println!("A collision was discarded because \
+                particle 11 had index {} where {} was expected", 
+                p_1, self.collision_count_1);
         }
     }
 }
@@ -135,63 +154,41 @@ impl CollisionQueue
     {
         for i in 0..particles.get_len()
         {
-            let (c_horizontal, c_vertical, c_particle)
-                = find_new_collisions(particles, i as i8);
-
-            self.push_collision(c_horizontal);
-            self.push_collision(c_vertical);
-            self.push_collision(c_particle);
+            self.add_new_collisions(particles, i);
         }
     }
 
     pub fn resolve_next_collision(
-        &mut self, mut particles: &mut particle::Particles)
+        &mut self, c: &Collision, mut particles: &mut particle::Particles)
     {
-        let c = self.get_next();
-        c.resolve_collision(&mut particles);
+        //let c = self.pop_next();
+        c.transform_velocity(&mut particles);
+        let p_1 = c.particle_1_index;
 
-        let (c_new_h, c_new_v, c_new_p) 
-            = find_new_collisions(particles, c.particle_1_index);
+        assert!(p_1 >= 0);
+        self.add_new_collisions(particles, p_1 as usize);
+    }
 
-        // TODO: FInd a better way to do this. It doesn't work properly.
-        if c_new_h.get_time() > 1e-5
+
+    pub fn add_new_collisions(
+        &mut self, particles: &particle::Particles, i: usize)
+    {
+        for obj in ["vertical", "horizontal", "particle"].iter()
         {
-            self.push_collision(c_new_h);
-        }
-        if c_new_v.get_time() > 1e-5
-        {
-            self.push_collision(c_new_v);
-        }
-        if c_new_p.get_time() > 1e-5
-        {
-            self.push_collision(c_new_p);
+            let c = find_new_collision(particles, i, obj);
+            self.push_collision(c);
         }
     }
 }
 
 
-pub fn find_new_collisions(particles: &particle::Particles, i: i8) 
-    -> (Collision, Collision, Collision)
+pub fn find_new_collision(particles: &particle::Particles, i: usize, other: &str) 
+    -> Collision
 {
-    assert!(i >= 0);
-    let collision_count_1 = particles.get_collision_count(i);
+    let collision_count_1 = particles.get_collision_count(i as i8);
 
-    let (t_h, n_h) 
-        = particles.time_until_next_collisions(i as usize, "horizontal");
-    let c_horizontal 
-        = make_collision(t_h, i as usize, n_h, collision_count_1, 0);
-
-    let (t_v, n_v) 
-        = particles.time_until_next_collisions(i as usize, "vertical");
-    let c_vertical 
-        = make_collision(t_v, i as usize, n_v, collision_count_1, 0);
-
-    let (t_p, n_p)
-        = particles.time_until_next_collisions(i as usize, "particle");
-    let c_particle 
-        = make_collision(t_p, i as usize, n_p, collision_count_1, 0);
-
-    return (c_horizontal, c_vertical, c_particle);
+    let (t, n) = particles.time_until_next_collisions(i, other);
+    return make_collision(t, i as usize, n, collision_count_1, 0);
 }
 
 

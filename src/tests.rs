@@ -5,7 +5,6 @@ use crate::collisions;
 
 pub fn test_main()
 {
-    //test_generate_particles();
     test_simulation();
 }
 
@@ -42,23 +41,33 @@ fn test_fill_queue(p: &particle::Particles) -> collisions::CollisionQueue
     return collisions;
 }
 
-fn test_resolve_collition(mut p: &mut particle::Particles, q: &mut collisions::CollisionQueue, number_of_events: usize)
+fn test_resolve_collision(mut p: &mut particle::Particles, q: &mut collisions::CollisionQueue, number_of_events: usize)
 {
-    
     for i in 0..number_of_events
     {
-        println!("Event numer: {}", i);
+        println!("Event number: {}", i);
         print_particle_stats(&p);
         print_collision_stats(&q);
-        plotting::plot_positions(&p);
 
         let c = q.pop_next();
-        let dt = c.get_time();
 
-        println!("Propagating for a time {}", dt);
-        p.propagate(dt);
+        // Check here if collision is valid
+        let p_1 = c.get_particle_1();
+        let p_2 = c.get_particle_2();
+        let cc_1 = c.get_collision_count(1);
+        let cc_2 = c.get_collision_count(2);
 
-        q.resolve_next_collision(&mut p);
+        if p.get_collision_count(p_1) == cc_1 
+        && p.get_collision_count(p_2) == cc_2
+        {
+            plotting::plot_positions(&p);
+
+            let dt = c.get_time();
+            println!("Propagating for a time {}", dt);
+            p.propagate(dt);
+
+            q.resolve_next_collision(&c, &mut p);
+        }
     }
 }
 
@@ -69,7 +78,7 @@ fn test_simulation()
     let n = parameters::NUMBER_OF_COLLISIONS;
 
     println!("Running simulation.");
-    test_resolve_collition(&mut p, &mut q, n);
+    test_resolve_collision(&mut p, &mut q, n);
 }
 
 pub fn print_collision_stats(q: &collisions::CollisionQueue)
@@ -78,7 +87,7 @@ pub fn print_collision_stats(q: &collisions::CollisionQueue)
     println!("Collision queue\n---------------------------------");
     for c in q.get_heap()
     {
-        println!("Collision {:.2}:\tt={:.2}, Particle {} colliding with particle {}", 
+        println!("Collision {}:\tt={:.3}, Particle {} colliding with particle {}", 
             i, c.get_time(), c.get_particle_1(), c.get_particle_2());
             i += 1;
     }

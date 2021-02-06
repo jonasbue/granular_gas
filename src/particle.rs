@@ -33,7 +33,8 @@ impl Particles
         }
     }
 
-    pub fn time_until_next_collisions(&self, i: usize, wall: &str) -> (f64, i8)
+    pub fn time_until_next_collisions(&self, i: usize, wall: &str) 
+        -> (f64, i8)
     {
         assert_eq!(self.r[i], parameters::R);
         match wall
@@ -135,9 +136,10 @@ fn wall_collition_time(pos: f64, v: f64, radius: f64) -> f64
     else if v < 0. { delta_t = (radius - pos) / v; }
     else if v == 0. { delta_t = f64::INFINITY; } // This case is redundant
 
-    // Invalid positions (outside box or overlap between particles)
+    // Invalid positions (outside box or overlap between particles) can
     // give negative times. If a particle hits a corner, this might happen.
     assert!(delta_t > -1e-5, "Non-positive time computed: delta_t = {}", delta_t);
+
     return delta_t;
 }
 
@@ -147,18 +149,3 @@ fn particle_collision_time() -> f64
     return f64::INFINITY;
     // I mean, atoms are - like - REALLY small.
 }
-
-    // Sets the velocity of a particle
-    /*
-    pub fn set_velocity(&mut self, v_x: f64, v_y: f64)
-    {
-        // Infinity can't be good. Let's avoid that.
-        // If this by any means should panic, it probably 
-        // means that some division statement is wrong.
-        assert_ne!(v_x, f64::INFINITY);
-        assert_ne!(v_y, f64::INFINITY);
-
-        self.vel.x = v_x;
-        self.vel.y = v_y;
-    }
-    */

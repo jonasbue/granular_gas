@@ -13,4 +13,4 @@ pub const V_0: f64 = 1.;
 pub const R: f64 = 0.1;
 pub const M: f64 = 1.;
 
-pub const NUMBER_OF_COLLISIONS: usize = 12;
+pub const NUMBER_OF_COLLISIONS: usize = 4;
