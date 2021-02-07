@@ -54,7 +54,7 @@ impl Particles
     // Propagates all particles in list for a time dt
     pub fn propagate(&mut self, dt: f64)
     {
-        for i in 0..self.r.len()
+        for i in 0..self.get_len()
         {
             //assert!(self.is_within_box(i));
             self.pos[[0,i]] += self.vel[[0,i]] * dt;

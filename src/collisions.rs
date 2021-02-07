@@ -1,4 +1,3 @@
-#[allow(dead_code)]
 extern crate ndarray;
 
 use crate::particle;
@@ -12,9 +11,9 @@ pub struct Collision
 {
     time: f64,
     particle_1_index: i8, 
-    particle_2_index: i8, // Negative values imply that particle_2 is really a wall
-                    // this is interpreted in transform_velocity(), and
-                    // the value is set when the collision is enqueued.
+    particle_2_index: i8,   // Negative values imply that particle_2 is really a wall
+                            // this is interpreted in transform_velocity(), and
+                            // the value is set when the collision is enqueued.
 
     collision_count_1: u8,  // Collision count at the time the collision
     collision_count_2: u8,  // was detected. When it is resolved, compare
@@ -48,6 +47,23 @@ impl Collision
                             of particles in a collision"),
         }
     }
+    
+    pub fn is_valid(&self, p: &particle::Particles) -> bool
+    {
+        let p_1 = self.get_particle_1();
+        let p_2 = self.get_particle_2();
+        let cc_1 = self.get_collision_count(1);
+        let cc_2 = self.get_collision_count(2);
+
+        assert!(p_1 >= 0);
+        assert!(p_2 >= -2);
+        assert!(p_2 != p_1);
+
+        return p.get_collision_count(p_1) == cc_1 
+            && p.get_collision_count(p_2) == cc_2;
+    }
+
+
 
     // Transform the velocities of the particles involved in the collision.
     pub fn transform_velocity(&self, particles: &mut particle::Particles)
@@ -55,50 +71,34 @@ impl Collision
         // particle_2 is either a particle or a wall.
         // a positive index means particle, a negative means wall
 
-        // Particle_1 must have a nonnegative index.
-        assert!(self.get_particle_1() >= 0);
-        assert!(self.get_particle_2() >= -2);
-
+        // p_2 can be negative, and must be i8
         let p_1 = self.get_particle_1() as usize;
-        let p_2 = self.get_particle_2() as i8;
-        println!("P_1 = {}, P_2 = {}", p_1, p_2);
+        let p_2 = self.get_particle_2();
 
-        if self.collision_count_1 
-            == particles.get_collision_count(p_1 as i8)
+        // Collide with horizontal wall
+        if p_2 == -1
         {
-            // Collide with horizontal wall
-            if p_2 == -1
-            {
-                println!("Horizontal wall transform complete");
-                particles.vel[[0, p_1]] *= parameters::XI;
-                particles.vel[[1, p_1]] *= - parameters::XI;
-            }
-            // Collide with vertical wall
-            else if p_2 == -2
-            {
-                println!("Vertical wall transform complete");
-                particles.vel[[0, p_1]] *= - parameters::XI;
-                particles.vel[[1, p_1]] *= parameters::XI;
-            }
-            // Collide with a particle.
-            else
-            {
-                assert!(p_2 != p_1 as i8);
-                if particles.get_collision_count(p_1 as i8) 
-                    == particles.get_collision_count(p_2)
-                {
-                    particles.increment_collision_count(p_2 as usize);
-                    unimplemented!();
-                }
-            }
-            particles.increment_collision_count(p_1);
+            println!("Horizontal wall transform complete");
+            particles.vel[[0, p_1]] *= parameters::XI;
+            particles.vel[[1, p_1]] *= - parameters::XI;
         }
+        // Collide with vertical wall
+        else if p_2 == -2
+        {
+            println!("Vertical wall transform complete");
+            particles.vel[[0, p_1]] *= - parameters::XI;
+            particles.vel[[1, p_1]] *= parameters::XI;
+        }
+        // Collide with a particle.
         else
         {
-            println!("A collision was discarded because \
-                particle 11 had index {} where {} was expected", 
-                p_1, self.collision_count_1);
+            // p_2 must be positive for this code to execute
+            // casting to usize is therefore safe.
+            particles.increment_collision_count(p_2 as usize);
+            unimplemented!();
         }
+        particles.increment_collision_count(p_1);
+
     }
 }
 
@@ -150,45 +150,45 @@ impl CollisionQueue
 
     // Iterates through all existing particles, and
     // adds all expected collisions to CollisionQueue.
-    pub fn fill_collision_queue(&mut self, particles: &particle::Particles)
+    pub fn fill_collision_queue(&mut self, particles: &particle::Particles, t_0: f64)
     {
         for i in 0..particles.get_len()
         {
-            self.add_new_collisions(particles, i);
+            self.add_new_collisions(particles, i, t_0);
         }
     }
 
     pub fn resolve_next_collision(
-        &mut self, c: &Collision, mut particles: &mut particle::Particles)
+        &mut self, c: &Collision, mut particles: &mut particle::Particles, t: f64)
     {
         //let c = self.pop_next();
         c.transform_velocity(&mut particles);
         let p_1 = c.particle_1_index;
 
         assert!(p_1 >= 0);
-        self.add_new_collisions(particles, p_1 as usize);
+        self.add_new_collisions(particles, p_1 as usize, t);
     }
 
 
     pub fn add_new_collisions(
-        &mut self, particles: &particle::Particles, i: usize)
+        &mut self, particles: &particle::Particles, i: usize, t: f64)
     {
         for obj in ["vertical", "horizontal", "particle"].iter()
         {
-            let c = find_new_collision(particles, i, obj);
+            let c = find_new_collision(particles, i, t, obj);
             self.push_collision(c);
         }
     }
 }
 
 
-pub fn find_new_collision(particles: &particle::Particles, i: usize, other: &str) 
+pub fn find_new_collision(particles: &particle::Particles, i: usize, t: f64, other: &str) 
     -> Collision
 {
     let collision_count_1 = particles.get_collision_count(i as i8);
 
-    let (t, n) = particles.time_until_next_collisions(i, other);
-    return make_collision(t, i as usize, n, collision_count_1, 0);
+    let (dt, n) = particles.time_until_next_collisions(i, other);
+    return make_collision(t + dt, i as usize, n, collision_count_1, 0);
 }
 
 

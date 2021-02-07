@@ -29,11 +29,12 @@ fn test_generate_particles(n: usize) -> particle::Particles
     p
 }
 
-fn test_fill_queue(p: &particle::Particles) -> collisions::CollisionQueue
+fn test_fill_queue(p: &particle::Particles, t_0: f64) 
+    -> collisions::CollisionQueue
 {
     let mut collisions = collisions::CollisionQueue::new();
 
-    collisions.fill_collision_queue(&p);
+    collisions.fill_collision_queue(&p, t_0);
     println!("Queue filled successfully.");
     print_collision_stats(&collisions);
 
@@ -41,8 +42,13 @@ fn test_fill_queue(p: &particle::Particles) -> collisions::CollisionQueue
     return collisions;
 }
 
-fn test_resolve_collision(mut p: &mut particle::Particles, q: &mut collisions::CollisionQueue, number_of_events: usize)
+fn test_resolve_collision(
+    mut p: &mut particle::Particles, 
+    q: &mut collisions::CollisionQueue, 
+    number_of_events: usize,
+    t_0: f64)
 {
+    let mut t = t_0;
     for i in 0..number_of_events
     {
         println!("Event number: {}", i);
@@ -51,34 +57,37 @@ fn test_resolve_collision(mut p: &mut particle::Particles, q: &mut collisions::C
 
         let c = q.pop_next();
 
-        // Check here if collision is valid
-        let p_1 = c.get_particle_1();
-        let p_2 = c.get_particle_2();
-        let cc_1 = c.get_collision_count(1);
-        let cc_2 = c.get_collision_count(2);
-
-        if p.get_collision_count(p_1) == cc_1 
-        && p.get_collision_count(p_2) == cc_2
+        if c.is_valid(p)
         {
             plotting::plot_positions(&p);
 
-            let dt = c.get_time();
+            let dt = c.get_time() - t;
             println!("Propagating for a time {}", dt);
             p.propagate(dt);
+            t += dt;
 
-            q.resolve_next_collision(&c, &mut p);
+            q.resolve_next_collision(&c, &mut p, t);
+        }
+        else
+        {
+            println!("A collision was discarded because \
+            particle 1 had index {} where {} was expected, or
+            particle 2 had index {} where {} was expected", 
+            c.get_collision_count(1), p.get_collision_count(c.get_particle_1()),
+            c.get_collision_count(2), p.get_collision_count(c.get_particle_2()));
         }
     }
 }
 
 fn test_simulation()
 {
+    let t_0 = parameters::T_0;
     let mut p = test_generate_particles(parameters::N);
-    let mut q = test_fill_queue(&p);
+    let mut q = test_fill_queue(&p, t_0);
     let n = parameters::NUMBER_OF_COLLISIONS;
 
     println!("Running simulation.");
-    test_resolve_collision(&mut p, &mut q, n);
+    test_resolve_collision(&mut p, &mut q, n, t_0);
 }
 
 pub fn print_collision_stats(q: &collisions::CollisionQueue)

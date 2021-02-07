@@ -8,9 +8,10 @@ pub const XI: f64 = 1.; // The impact parameter.
                         // Not to be confused with the 
                         // common variable name x_i.
 
-pub const N: usize = 1;
+pub const N: usize = 3;
 pub const V_0: f64 = 1.;
-pub const R: f64 = 0.1;
+pub const R: f64 = 0.05;
 pub const M: f64 = 1.;
 
-pub const NUMBER_OF_COLLISIONS: usize = 4;
+pub const NUMBER_OF_COLLISIONS: usize = 12;
+pub const T_0: f64 = 0.;
