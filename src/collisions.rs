@@ -1,4 +1,5 @@
-extern crate ndarray;
+//extern crate ndarray;
+//use ndarray::prelude::*;
 
 use crate::particle;
 use crate::parameters;
@@ -66,7 +67,7 @@ impl Collision
 
 
     // Transform the velocities of the particles involved in the collision.
-    pub fn transform_velocity(&self, particles: &mut particle::Particles)
+    pub fn transform_velocity(&self, p: &mut particle::Particles)
     {
         // particle_2 is either a particle or a wall.
         // a positive index means particle, a negative means wall
@@ -75,29 +76,47 @@ impl Collision
         let p_1 = self.get_particle_1() as usize;
         let p_2 = self.get_particle_2();
 
+        // Impact parameter XI
+        let xi = parameters::XI;
+
         // Collide with horizontal wall
         if p_2 == -1
         {
             println!("Horizontal wall transform complete");
-            particles.vel[[0, p_1]] *= parameters::XI;
-            particles.vel[[1, p_1]] *= - parameters::XI;
+            p.vel[[0, p_1]] *= xi;
+            p.vel[[1, p_1]] *= - xi;
         }
         // Collide with vertical wall
         else if p_2 == -2
         {
             println!("Vertical wall transform complete");
-            particles.vel[[0, p_1]] *= - parameters::XI;
-            particles.vel[[1, p_1]] *= parameters::XI;
+            p.vel[[0, p_1]] *= - xi;
+            p.vel[[1, p_1]] *= xi;
         }
         // Collide with a particle.
         else
         {
+            let (r_2, _d, dvdx, _dx_2, _dv_2, dx) 
+                = particle::calculate_impact_stats(
+                    &p.pos, &p.vel, &p.r, p_1, p_2 as usize);
+
+            let mu = p.m[p_2 as usize] 
+                / (p.m[p_1] + p.m[p_2 as usize]);
+
+            let c = ((1. + xi) * mu * dvdx) / r_2;
+
+            p.vel[[0, p_1]] += c*dx[0];
+            p.vel[[1, p_1]] += c*dx[1];
+
+            p.vel[[0, p_2 as usize]] -= c*dx[0];
+            p.vel[[1, p_2 as usize]] -= c*dx[1];
+
             // p_2 must be positive for this code to execute
             // casting to usize is therefore safe.
-            particles.increment_collision_count(p_2 as usize);
-            unimplemented!();
+            p.increment_collision_count(p_2 as usize);
+            println!("Particle collision complete");
         }
-        particles.increment_collision_count(p_1);
+        p.increment_collision_count(p_1);
 
     }
 }
@@ -150,6 +169,7 @@ impl CollisionQueue
 
     // Iterates through all existing particles, and
     // adds all expected collisions to CollisionQueue.
+    // This will create double entries.
     pub fn fill_collision_queue(&mut self, particles: &particle::Particles, t_0: f64)
     {
         for i in 0..particles.get_len()
@@ -158,37 +178,50 @@ impl CollisionQueue
         }
     }
 
+    // This will not create double entries, because
+    // particle 1 and 2 cannot crash twice in a row.
     pub fn resolve_next_collision(
         &mut self, c: &Collision, mut particles: &mut particle::Particles, t: f64)
     {
         //let c = self.pop_next();
         c.transform_velocity(&mut particles);
         let p_1 = c.particle_1_index;
+        let p_2 = c.particle_2_index;
 
         assert!(p_1 >= 0);
         self.add_new_collisions(particles, p_1 as usize, t);
+        
+        if p_2 >= 0 && p_2 != p_1
+        {
+            self.add_new_collisions(particles, p_2 as usize, t);
+        }
     }
 
 
     pub fn add_new_collisions(
         &mut self, particles: &particle::Particles, i: usize, t: f64)
     {
-        for obj in ["vertical", "horizontal", "particle"].iter()
+        for j in 0..particles.get_len() + 2
         {
-            let c = find_new_collision(particles, i, t, obj);
-            self.push_collision(c);
+            let c = find_new_collision(particles, i, j as i8 - 2, t);
+            if c.get_time().is_finite()
+            {
+                self.push_collision(c);
+            }
         }
     }
 }
 
 
-pub fn find_new_collision(particles: &particle::Particles, i: usize, t: f64, other: &str) 
+pub fn find_new_collision(
+    particles: &particle::Particles, i: usize, j: i8, t: f64) 
     -> Collision
 {
-    let collision_count_1 = particles.get_collision_count(i as i8);
+    let cc_1 = particles.get_collision_count(i as i8);
+    let cc_2 = particles.get_collision_count(j);
 
-    let (dt, n) = particles.time_until_next_collisions(i, other);
-    return make_collision(t + dt, i as usize, n, collision_count_1, 0);
+    let (dt, n) = particles.time_until_next_collisions(i, j);
+    return make_collision(t + dt, i as usize, n, cc_1, cc_2);
 }
 
 

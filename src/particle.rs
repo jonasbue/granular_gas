@@ -1,8 +1,9 @@
-#[allow(dead_code)]
 extern crate ndarray;
 use ndarray::prelude::*;
+
 use ndarray_rand::rand::{Rng, thread_rng};
-use ndarray_rand::{rand_distr::Uniform, RandomExt};
+use ndarray_rand::rand_distr::Uniform;
+use ndarray_rand::RandomExt;
 
 use crate::parameters;
 
@@ -12,7 +13,8 @@ pub struct Particles
     pub vel: Array2<f64>,
     pub r: Array1<f64>,
     pub m: Array1<f64>,
-    pub collision_count: Array1<u8> // Number of times each particle has collided
+    pub collision_count: Array1<u8> // Number of times each 
+                                    // particle has collided
 }
 
 
@@ -33,21 +35,24 @@ impl Particles
         }
     }
 
-    pub fn time_until_next_collisions(&self, i: usize, wall: &str) 
+    pub fn time_until_next_collisions(&self, i: usize, j: i8) 
         -> (f64, i8)
     {
         assert_eq!(self.r[i], parameters::R);
-        match wall
+        assert!(j >= -2, "Undefined index for particle 2 encountered.");
+        match j 
         {
-            "horizontal" =>
-            (wall_collition_time(
-                self.pos[[1, i]], self.vel[[1, i]], self.r[i]), -1),
-            "vertical" =>
-            (wall_collition_time(
-                self.pos[[0, i]], self.vel[[0, i]], self.r[i]), -2),
-            "particle" =>
-            (particle_collision_time(), 100),
-            _ => panic!("That object is not defined. Did you type correctly?")
+            -1 =>
+                (wall_collition_time(
+                    self.pos[[1, i]], self.vel[[1, i]], self.r[i]), -1),
+
+            -2 =>
+                (wall_collition_time(
+                    self.pos[[0, i]], self.vel[[0, i]], self.r[i]), -2),
+
+            _ =>
+                (particle_collision_time(
+                    &self.pos, &self.vel, &self.r, i, j as usize), j), 
         }
     } 
 
@@ -71,6 +76,31 @@ impl Particles
         self.pos[[1, i]] < parameters::Y_MAX - parameters::R
     }
 
+    // Checks if particle i is overlapping 
+    // with any of the other particles
+    pub fn is_overlapping(&self, i: usize) -> bool
+    {
+        for j in 0..self.get_len()
+        {
+            if j != i
+            {
+                let dx = self.pos[[0, i]] - self.pos[[0, j]];
+                let dy = self.pos[[1, i]] - self.pos[[1, j]];
+
+                if dx.powi(2) + dy.powi(2)
+                    < (self.r[[i]] + self.r[[j]]).powi(2)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                println!("It was avoided");
+            }
+        }
+        return false;
+    }
+
     // Increments collision count of particle i
     pub fn increment_collision_count(&mut self, i: usize)
     {
@@ -84,11 +114,11 @@ pub fn generate_particles(n: usize, x_min: f64, x_max: f64, _y_min: f64, _y_max:
 {
     // Check that the particles can fit within the box
     // This is a naîve assertion:
-    // If this is only barely true, the 
+    // Note: If this is only barely true, the 
     // initialization will take a very long time.
     assert!((x_max - x_min) * (_y_max - _y_min) 
-        > 2.*std::f64::consts::PI*r*n as f64, 
-        "{} particles of this size will not fit within the box", n);
+        > 2.*std::f64::consts::PI*r*r*n as f64, 
+        "{} particles of radius {} will not fit within the box", n, r);
 
     // Y_min and y_max are not currently used, 
     // but could be implemented for a rectangular box.
@@ -116,7 +146,7 @@ pub fn generate_particles(n: usize, x_min: f64, x_max: f64, _y_min: f64, _y_max:
     let mut rng = thread_rng();
     for i in 0..n
     {
-        while !particles.is_within_box(i)
+        while !particles.is_within_box(i) || particles.is_overlapping(i)
         {
             particles.pos[[0,i]] = rng.sample(Uniform::new(x_min, x_max));
             particles.pos[[1,i]] = rng.sample(Uniform::new(x_min, x_max));
@@ -144,8 +174,48 @@ fn wall_collition_time(pos: f64, v: f64, radius: f64) -> f64
 }
 
 
-fn particle_collision_time() -> f64
+// Returns time until particle i will collide with particle j.
+fn particle_collision_time(
+    pos: &Array2::<f64>, 
+    vel: &Array2::<f64>,
+    r: &Array1::<f64>,
+    i: usize,
+    j: usize)
+    -> f64
 {
-    return f64::INFINITY;
-    // I mean, atoms are - like - REALLY small.
+    let (_r_2, d, dvdx, _dx_2, dv_2, _dx) 
+        = calculate_impact_stats(&pos, &vel, &r, i, j);
+
+    if dvdx < 0. && d > 0.
+    {
+        -((dvdx) + d.sqrt())/dv_2
+    }
+    else
+    {
+        f64::INFINITY
+    }
+}
+
+pub fn calculate_impact_stats(
+    pos: &Array2::<f64>, vel: &Array2::<f64>, 
+    r: &Array1::<f64>, i: usize, j: usize) 
+    -> (f64, f64, f64, f64, f64, Array1::<f64>)
+{
+    let xi: f64 = pos[[0, i]];
+    let yi: f64 = pos[[1, i]];
+    let xj: f64 = pos[[0, j]];
+    let yj: f64 = pos[[1, j]];
+
+    let vxi: f64 = vel[[0, i]];
+    let vyi: f64 = vel[[1, i]];
+    let vxj: f64 = vel[[0, j]];
+    let vyj: f64 = vel[[1, j]];
+
+    let r_ij_squared: f64 = (r[j] + r[i]).powi(2);
+
+    let dx: Array1::<f64> = arr1(&[xj - xi, yj - yi]);
+    let dv: Array1::<f64> = arr1(&[vxj - vxi, vyj - vyi]);
+    let d: f64 = dv.dot(&dx).powi(2) - dv.dot(&dv) * (dx.dot(&dx) - r_ij_squared);
+
+    return (r_ij_squared, d, dv.dot(&dx), dx.dot(&dx), dv.dot(&dv), dx);
 }
