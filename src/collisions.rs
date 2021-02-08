@@ -44,8 +44,8 @@ impl Collision
         {
             1 => self.collision_count_1,
             2 => self.collision_count_2,
-            _ => panic!("Only 1 and 2 are valid indices \
-                            of particles in a collision"),
+            _ => panic!("Only 1 and 2 are valid indices\
+of particles in a collision"),
         }
     }
     
@@ -142,12 +142,14 @@ impl CollisionQueue
     }
     */
 
+    /*
     pub fn get_next(&self) -> &Collision
     {
         let c = self.heap.peek();
         assert!(c.is_some());
         return c.unwrap();
     }
+    */
 
     pub fn pop_next(&mut self) -> Collision
     {

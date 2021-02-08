@@ -38,7 +38,6 @@ impl Particles
     pub fn time_until_next_collisions(&self, i: usize, j: i8) 
         -> (f64, i8)
     {
-        assert_eq!(self.r[i], parameters::R);
         assert!(j >= -2, "Undefined index for particle 2 encountered.");
         match j 
         {
