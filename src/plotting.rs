@@ -6,6 +6,7 @@ use crate::parameters;
 
 //extern crate ndarray;
 use ndarray::s;
+use ndarray::prelude::*;
 
 pub fn plot_positions(particles: &particle::Particles)
 {
@@ -21,7 +22,7 @@ pub fn plot_positions(particles: &particle::Particles)
             particles.pos.slice(s![0,..]), 
             particles.pos.slice(s![1,..]), 
             &[Color("black"), 
-            PointSize(parameters::R * 140.),// 140 is a scaling factor 
+            PointSize(1.),// 140 is a scaling factor 
             PointSymbol('O'),               // set by hand to give the
                                             // particles the right size.
         ])
@@ -60,3 +61,30 @@ pub fn plot_positions(particles: &particle::Particles)
         Err(gnu_error) => println!("Figure could not be rendered: {:?}", gnu_error),
     };
 }
+
+pub fn plot_stats(t: ArrayView<f64, Ix1>, y: ArrayView<f64, Ix1>)
+{
+    let mut fig = Figure::new();
+    fig.axes2d()
+        .lines(
+            t,
+            y,
+            &[Color("black"),
+            LineWidth(3.),
+            ])
+        //.set_x_range(Fix(0), Fix(parameters::X_MAX))
+        //.set_y_range(Fix(0.), Fix(60.))
+        ;
+
+    match fig.show()
+    {
+        Ok(show) =>
+        {
+            println!("Figure rendered correctly");
+            drop(show);
+        }
+        Err(gnu_error) => println!("Figure could not be rendered: {:?}", gnu_error),
+    };
+
+}
+ 

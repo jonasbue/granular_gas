@@ -1,3 +1,6 @@
+extern crate ndarray;
+use ndarray::prelude::*;
+
 use crate::particle;
 use crate::parameters;
 use crate::plotting;
@@ -11,8 +14,10 @@ pub fn simulate_system()
     let mut q = fill_queue(&p, t_0);
     let n = parameters::NUMBER_OF_COLLISIONS;
 
+
     println!("Running simulation.");
-    evolve_system(&mut p, &mut q, n, t_0);
+    let kinetic_energy = evolve_system(&mut p, &mut q, n, t_0);
+
 }
 
 pub fn evolve_system(
@@ -20,9 +25,17 @@ pub fn evolve_system(
     q: &mut collisions::CollisionQueue, 
     number_of_events: usize,
     t_0: f64)
+    -> Array2<f64>
 {
     let mut t = t_0;
     let mut i: usize = 0;
+
+    // system_data contains all valuable data of system.
+    // index 0: time of collisions
+    // index 1: kinetic energy at these times
+    let mut system_data: Array2<f64> = Array2::zeros((2, number_of_events));
+    plotting::plot_positions(&p);
+
     while i < number_of_events
     {
 
@@ -31,12 +44,17 @@ pub fn evolve_system(
         if c.is_valid(p)
         {
             println!("Event number: {}", i);
-            print_particle_stats(&p);
+            //print_particle_stats(&p);
             //print_collision_stats(&q);
-            plotting::plot_positions(&p);
+            //plotting::plot_positions(&p);
+            system_data[[0, i]] = t;
+            system_data[[1, i]] = p.get_kinetic_energy();
 
+
+            // t is time of previous collision,
+            // dt is time between previous and next collision.
             let dt = c.get_time() - t;
-            println!("Propagating for a time {}", dt);
+            //println!("Propagating for a time {}", dt);
             p.propagate(dt);
             t += dt;
             i += 1;
@@ -53,9 +71,22 @@ pub fn evolve_system(
             c.get_collision_count(2), p.get_collision_count(c.get_particle_2()));
             */
         }
-        println!("-------------------------------------------");
+        //println!("-------------------------------------------");
     }
+    return system_data;
 }
+
+/*
+fn append_system_stats() -> Array6<f64>
+{
+
+}
+
+fn write_simulation_to_file(stats: Array6<f64>)
+{
+
+}
+*/
 
 // Test functions for a lot of stuff:
 fn initiate_system(n: usize) -> particle::Particles
@@ -70,7 +101,7 @@ fn initiate_system(n: usize) -> particle::Particles
         parameters::M);
 
     //plotting::plot_positions(&p);
-    print_particle_stats(&p);
+    //print_particle_stats(&p);
     p
 }
 
@@ -81,7 +112,7 @@ pub fn fill_queue(p: &particle::Particles, t_0: f64)
 
     q.fill_collision_queue(&p, t_0);
     println!("Queue filled successfully.");
-    print_collision_stats(&q);
+    //print_collision_stats(&q);
 
     return q;
 }

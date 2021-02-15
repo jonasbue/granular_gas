@@ -1,11 +1,20 @@
 extern crate ndarray;
-use ndarray::prelude::*;
+extern crate csv;
+extern crate ndarray_csv;
 
+use ndarray::prelude::*;
 use ndarray_rand::rand::{Rng, thread_rng};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
 
 use crate::parameters;
+
+/*
+use csv::{ReaderBuilder, WriterBuilder};
+use ndarray_csv::{Array2Reader, Array2Writer};
+use std::fs::File;
+use std::error::Error;
+*/
 
 pub struct Particles
 {
@@ -13,7 +22,7 @@ pub struct Particles
     pub vel: Array2<f64>,
     pub r: Array1<f64>,
     pub m: Array1<f64>,
-    pub collision_count: Array1<u8> // Number of times each 
+    pub collision_count: Array1<u16> // Number of times each 
                                     // particle has collided
 }
 
@@ -25,7 +34,7 @@ impl Particles
         self.r.len()
     }
 
-    pub fn get_collision_count(&self, index: i8) -> u8
+    pub fn get_collision_count(&self, index: i16) -> u16
     {
         assert!(index >= -2);
         match index
@@ -35,8 +44,19 @@ impl Particles
         }
     }
 
-    pub fn time_until_next_collisions(&self, i: usize, j: i8) 
-        -> (f64, i8)
+    pub fn get_kinetic_energy(&self) -> f64
+    {
+        let mut energy: f64 = 0.;
+        for i in 0..self.get_len()
+        {
+            energy += 0.5 * self.m[i] 
+                * (self.vel[[0, i]].powi(2) + self.vel[[1, i]].powi(2))
+        }
+        energy
+    }
+
+    pub fn time_until_next_collisions(&self, i: usize, j: i16) 
+        -> (f64, i16)
     {
         assert!(j >= -2, "Undefined index for particle 2 encountered.");
         match j 
@@ -92,10 +112,6 @@ impl Particles
                     return true;
                 }
             }
-            else
-            {
-                println!("It was avoided");
-            }
         }
         return false;
     }
@@ -109,14 +125,22 @@ impl Particles
 
 
 // Fill a box with borders at x_min and x_max with particles
-pub fn generate_particles(n: usize, x_min: f64, x_max: f64, _y_min: f64, _y_max: f64, r: f64, m: f64) -> Particles
+pub fn generate_particles(
+    n: usize, 
+    x_min: f64, 
+    x_max: f64, 
+    _y_min: f64, 
+    _y_max: f64, 
+    r: f64, 
+    m: f64) 
+    -> Particles
 {
     // Check that the particles can fit within the box
     // This is a naîve assertion:
     // Note: If this is only barely true, the 
     // initialization will take a very long time.
     assert!((x_max - x_min) * (_y_max - _y_min) 
-        > 2.*std::f64::consts::PI*r*r*n as f64, 
+        > 4.*std::f64::consts::PI*r*r*n as f64, 
         "{} particles of radius {} will not fit within the box", n, r);
 
     // Y_min and y_max are not currently used, 
@@ -143,15 +167,22 @@ pub fn generate_particles(n: usize, x_min: f64, x_max: f64, _y_min: f64, _y_max:
     // particles or walls.
 
     let mut rng = thread_rng();
+    let mut replaces: i16 = 0;
     for i in 0..n
     {
         while !particles.is_within_box(i) || particles.is_overlapping(i)
         {
             particles.pos[[0,i]] = rng.sample(Uniform::new(x_min, x_max));
             particles.pos[[1,i]] = rng.sample(Uniform::new(x_min, x_max));
+
+            replaces += 1;
+            if replaces >= 5 * particles.get_len() as i16
+            {
+                println!("Particles have been replaced a lot now. Condider cancelling.");
+            }
         }
     }
-
+    println!("Number of times a particle was replaced: {}", replaces);
     return particles;
 }
 
@@ -218,3 +249,57 @@ pub fn calculate_impact_stats(
 
     return (r_ij_squared, d, dv.dot(&dx), dx.dot(&dx), dv.dot(&dv), dx);
 }
+
+/*
+pub fn particles_to_file(p: &Particles, filename: &str) -> Result<(), Box< dyn Error>>
+{
+    for el in Vec!["pos", "vel"] //, "r", "m"]
+    {
+        let f = File::create(filename.to_owned() + "_" + el.to_owned())?;
+        let mut writer = WriterBuilder::new().has_headers(false).from_writer(f);
+        match el
+        {
+            "pos" => writer.serialize_array2(&p.pos)?,
+            "vel" => writer.serialize_array2(&p.vel)?,
+            //"r" => writer.serialize_array1(&p.r)?,
+            //"m" => writer.serialize_array1(&p.m)?,
+            //"cc" => writer.serialize_array1(&p.collision_count)?,
+        }
+    }
+    Ok(())
+}
+*/
+
+/*
+pub fn file_to_particles(filename: &str, n: usize) -> Result<Particles, Box<dyn Error>>
+{
+    let f_pos = File::open(filename.to_owned() + "_pos")?;
+    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
+    let pos_read: Array2<f64> = reader.deserialize_array2((2, n))?;
+
+    let f_vel = File::open(filename.to_owned() + "_vel")?;
+    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
+    let vel_read: Array2<f64> = reader.deserialize_array2((2, n))?;
+
+    /*
+    let f_r = File::open(filename.to_owned() + "_r")?;
+    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
+    let r_read: Array1<f64> = reader.deserialize_array1(n)?;
+
+    let f_m = File::open(filename.to_owned() + "_m")?;
+    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
+    let m_read: Array1<f64> = reader.deserialize_array1(n)?;
+
+    let f_cc = File::open(filename.to_owned() + "_cc")?;
+    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
+    let cc_read: Array1<u16> = reader.deserialize_array1(n)?;
+    */
+
+    Ok(Particles{ 
+        pos: pos_read, 
+        vel: vel_read, 
+        r: r_read, 
+        m: m_read, 
+        collision_count: cc_read })
+}
+*/

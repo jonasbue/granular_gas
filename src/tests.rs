@@ -4,13 +4,17 @@ use ndarray::prelude::*;
 use crate::particle;
 use crate::parameters;
 use crate::simulation;
+use crate::plotting;
 
 pub fn test_main()
 {
+    /*
     assert_correct_impact_stats();
     test_one_particle();
     test_two_particles();
     test_collision_angle();
+    */
+    test_many_particles();
 }
 
 
@@ -73,6 +77,25 @@ fn test_collision_angle()
     each other, then the smaller particle will change direction.");
     simulation::evolve_system(&mut p, &mut q, 5, 0.);
 }
+
+// Generates particles and plots the total kinetic energy of the system.
+fn test_many_particles()
+{
+    let mut p = particle::generate_particles(
+        100,
+        parameters::X_MIN,
+        parameters::X_MAX,
+        parameters::Y_MIN,
+        parameters::Y_MAX,
+        parameters::R,
+        parameters::M,);
+    let mut q = simulation::fill_queue(&p, 0.);
+    println!("Running simulation with many particles.");
+    println!("Energy should remain constant.");
+    let system_data = simulation::evolve_system(&mut p ,&mut q, 500, 0.);
+    plotting::plot_stats(system_data.slice(s![0,..]), system_data.slice(s![1,..]));
+}
+
 
 // Asserts that the collision function works properly
 // on one special case.
