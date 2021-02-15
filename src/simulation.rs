@@ -16,7 +16,7 @@ pub fn simulate_system()
 
 
     println!("Running simulation.");
-    let kinetic_energy = evolve_system(&mut p, &mut q, n, t_0);
+    let system_data = evolve_system(&mut p, &mut q, n, t_0, false);
 
 }
 
@@ -24,7 +24,8 @@ pub fn evolve_system(
     mut p: &mut particle::Particles, 
     q: &mut collisions::CollisionQueue, 
     number_of_events: usize,
-    t_0: f64)
+    t_0: f64,
+    test: bool)
     -> Array2<f64>
 {
     let mut t = t_0;
@@ -34,7 +35,6 @@ pub fn evolve_system(
     // index 0: time of collisions
     // index 1: kinetic energy at these times
     let mut system_data: Array2<f64> = Array2::zeros((2, number_of_events));
-    plotting::plot_positions(&p);
 
     while i < number_of_events
     {
@@ -44,34 +44,26 @@ pub fn evolve_system(
         if c.is_valid(p)
         {
             println!("Event number: {}", i);
-            //print_particle_stats(&p);
-            //print_collision_stats(&q);
-            //plotting::plot_positions(&p);
+
+            if test
+            {
+                print_particle_stats(&p);
+                print_collision_stats(&q);
+                plotting::plot_positions(&p);
+            }
+
             system_data[[0, i]] = t;
             system_data[[1, i]] = p.get_kinetic_energy();
-
 
             // t is time of previous collision,
             // dt is time between previous and next collision.
             let dt = c.get_time() - t;
-            //println!("Propagating for a time {}", dt);
             p.propagate(dt);
             t += dt;
             i += 1;
 
             q.resolve_next_collision(&c, &mut p, t);
         }
-        else
-        {
-            /*
-            println!("A collision was discarded because
-            particle 1 had index {} where {} was expected, or
-            particle 2 had index {} where {} was expected", 
-            c.get_collision_count(1), p.get_collision_count(c.get_particle_1()),
-            c.get_collision_count(2), p.get_collision_count(c.get_particle_2()));
-            */
-        }
-        //println!("-------------------------------------------");
     }
     return system_data;
 }

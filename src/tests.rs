@@ -8,12 +8,10 @@ use crate::plotting;
 
 pub fn test_main()
 {
-    /*
     assert_correct_impact_stats();
     test_one_particle();
     test_two_particles();
     test_collision_angle();
-    */
     test_many_particles();
 }
 
@@ -35,7 +33,7 @@ fn test_one_particle()
     println!("Behaving correctly, it should collide with \
     all four walls before returning to it's starting point \
     (x, y) = ({}, {})", 0.5, 0.5);
-    simulation::evolve_system(&mut p, &mut q, 5, 0.);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., true);
 
 }
 
@@ -55,7 +53,7 @@ fn test_two_particles()
     println!("Running simulation with two particles.");
     println!("Behaving correctly, thay should collide with \
     each other, then the walls, repeatedly.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0.);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., true);
 }
 
 
@@ -75,7 +73,7 @@ fn test_collision_angle()
     particles of vastly different size.");
     println!("Behaving correctly, they should collide with \
     each other, then the smaller particle will change direction.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0.);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., true);
 }
 
 // Generates particles and plots the total kinetic energy of the system.
@@ -92,7 +90,7 @@ fn test_many_particles()
     let mut q = simulation::fill_queue(&p, 0.);
     println!("Running simulation with many particles.");
     println!("Energy should remain constant.");
-    let system_data = simulation::evolve_system(&mut p ,&mut q, 500, 0.);
+    let system_data = simulation::evolve_system(&mut p ,&mut q, 500, 0., false);
     plotting::plot_stats(system_data.slice(s![0,..]), system_data.slice(s![1,..]));
 }
 

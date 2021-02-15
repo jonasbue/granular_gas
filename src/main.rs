@@ -7,7 +7,7 @@ mod simulation;
 
 fn main() 
 {
-    let arg = "test";
+    let arg = "simulate";
     match arg
     {
         "test" => tests::test_main(),

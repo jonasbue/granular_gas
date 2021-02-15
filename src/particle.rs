@@ -189,7 +189,7 @@ pub fn generate_particles(
 
 fn wall_collition_time(pos: f64, v: f64, radius: f64) -> f64
 {
-    /* Returns time until particle collides with a wall */
+    // Returns time until particle collides with a wall 
     let mut delta_t = 0.;
 
     if v > 0. { delta_t = (1. - radius - pos) / v; }

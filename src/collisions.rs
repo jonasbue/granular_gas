@@ -114,7 +114,6 @@ of particles in a collision"),
             // p_2 must be positive for this code to execute
             // casting to usize is therefore safe.
             p.increment_collision_count(p_2 as usize);
-            //println!("Particle collision complete");
         }
         p.increment_collision_count(p_1);
     }
