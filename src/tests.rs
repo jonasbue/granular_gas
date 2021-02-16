@@ -90,7 +90,7 @@ fn test_some_particles()
     let mut q = simulation::fill_queue(&p, 0.);
     println!("Running simulation with a small number of particles.");
     println!("Velocity and collision data will be printed.");
-    let (energy, speeds) = simulation::evolve_system(&mut p ,&mut q, 5, 0., &array![0.01], true);
+    let (energy, _speeds) = simulation::evolve_system(&mut p ,&mut q, 5, 0., &array![0.01], true);
     plotting::plot_energy(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
 }

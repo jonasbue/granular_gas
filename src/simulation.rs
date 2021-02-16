@@ -8,6 +8,7 @@ use crate::collisions;
 
 
 pub fn simulate_system(n_arr: &Array1<usize>, r_arr: &Array1<f64>, m_arr: &Array1<f64>)
+-> (Array2<f64>, Array2<f64>)
 {
     let t_0 = parameters::T_0;
     let mut p = initiate_system(n_arr, r_arr, m_arr);
@@ -18,17 +19,7 @@ pub fn simulate_system(n_arr: &Array1<usize>, r_arr: &Array1<f64>, m_arr: &Array
     let (energy, speeds) 
         = evolve_system(&mut p, &mut q, n, t_0, &m_arr, false);
 
-    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
-    /*
-    plotting::plot_stats(
-        Array::range(0., parameters::N as f64, 1.).view(), 
-        speeds.slice(s![0,..]));
-    plotting::plot_stats(
-        Array::range(0., parameters::N as f64, 1.).view(), 
-        speeds.slice(s![1,..]));
-    */
-    plotting::plot_energy(&energy);
-    plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+    return (energy, speeds);
 }
 
 
