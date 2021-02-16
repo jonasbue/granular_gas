@@ -100,16 +100,19 @@ of particles in a collision"),
                 = particle::calculate_impact_stats(
                     &p.pos, &p.vel, &p.r, p_1, p_2 as usize);
 
-            let mu = p.m[p_2 as usize] 
+            let mu_1 = p.m[p_2 as usize] 
+                / (p.m[p_1] + p.m[p_2 as usize]);
+            let mu_2 = p.m[p_1] 
                 / (p.m[p_1] + p.m[p_2 as usize]);
 
-            let c = ((1. + xi) * mu * dvdx) / r_2;
+            let c_1 = ((1. + xi) * mu_1 * dvdx) / r_2;
+            let c_2 = ((1. + xi) * mu_2 * dvdx) / r_2;
 
-            p.vel[[0, p_1]] += c*dx[0];
-            p.vel[[1, p_1]] += c*dx[1];
+            p.vel[[0, p_1]] += c_1*dx[0];
+            p.vel[[1, p_1]] += c_1*dx[1];
 
-            p.vel[[0, p_2 as usize]] -= c*dx[0];
-            p.vel[[1, p_2 as usize]] -= c*dx[1];
+            p.vel[[0, p_2 as usize]] -= c_2*dx[0];
+            p.vel[[1, p_2 as usize]] -= c_2*dx[1];
 
             // p_2 must be positive for this code to execute
             // casting to usize is therefore safe.

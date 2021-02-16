@@ -3,11 +3,13 @@ extern crate csv;
 extern crate ndarray_csv;
 
 use ndarray::prelude::*;
+use ndarray::{stack_new_axis};
 use ndarray_rand::rand::{Rng, thread_rng};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
 
 use crate::parameters;
+use crate::simulation;
 
 /*
 use csv::{ReaderBuilder, WriterBuilder};
@@ -44,16 +46,58 @@ impl Particles
         }
     }
 
-    pub fn get_kinetic_energy(&self) -> f64
+    pub fn get_avg_collision_count(&self) -> f64
+    {
+        let mut cc: f64 = 0.;
+        for i in 0..self.get_len()
+        {
+            cc += self.get_collision_count(i as i16) as f64;
+        }
+        cc
+    }
+
+    pub fn get_kinetic_energy(&self, i: usize) -> f64
+    {
+        0.5 * self.m[i] * self.get_speed(i).powi(2)
+    }
+        
+
+    pub fn get_tot_kinetic_energy(&self) -> f64
     {
         let mut energy: f64 = 0.;
         for i in 0..self.get_len()
         {
-            energy += 0.5 * self.m[i] 
-                * (self.vel[[0, i]].powi(2) + self.vel[[1, i]].powi(2))
+            energy += self.get_kinetic_energy(i);
         }
         energy
     }
+
+    pub fn get_kinetic_energy_for_mass(&self, mass: f64) -> f64
+    {
+        let mut energy: f64 = 0.;
+        for i in 0..self.get_len()
+        {
+            if (self.get_mass(i) - mass).abs() <= 1e-8
+            {
+                energy += self.get_kinetic_energy(i);
+            }
+        }
+        energy
+    }
+
+
+    pub fn get_mass(&self, i: usize) -> f64
+    {
+        self.m[i]
+    }
+
+
+    pub fn get_speed(&self, i: usize) -> f64
+    {
+        return (self.vel[[0, i]].powi(2) 
+            + self.vel[[1, i]].powi(2)).sqrt();
+    }
+
 
     pub fn time_until_next_collisions(&self, i: usize, j: i16) 
         -> (f64, i16)
@@ -75,6 +119,7 @@ impl Particles
         }
     } 
 
+
     // Propagates all particles in list for a time dt
     pub fn propagate(&mut self, dt: f64)
     {
@@ -86,14 +131,16 @@ impl Particles
         }
     }
 
+
     // Returns true if all particles are located within the box
     pub fn is_within_box(&self, i: usize) -> bool
     {
-        self.pos[[0, i]] > parameters::X_MIN + parameters::R && 
-        self.pos[[1, i]] > parameters::Y_MIN + parameters::R && 
-        self.pos[[0, i]] < parameters::X_MAX - parameters::R &&
-        self.pos[[1, i]] < parameters::Y_MAX - parameters::R
+        self.pos[[0, i]] > parameters::X_MIN + self.r[i] && 
+        self.pos[[1, i]] > parameters::Y_MIN + self.r[i] && 
+        self.pos[[0, i]] < parameters::X_MAX - self.r[i] &&
+        self.pos[[1, i]] < parameters::Y_MAX - self.r[i]
     }
+
 
     // Checks if particle i is overlapping 
     // with any of the other particles
@@ -116,6 +163,7 @@ impl Particles
         return false;
     }
 
+
     // Increments collision count of particle i
     pub fn increment_collision_count(&mut self, i: usize)
     {
@@ -126,22 +174,31 @@ impl Particles
 
 // Fill a box with borders at x_min and x_max with particles
 pub fn generate_particles(
-    n: usize, 
+    n_arr: &Array1<usize>, 
     x_min: f64, 
     x_max: f64, 
     _y_min: f64, 
     _y_max: f64, 
-    r: f64, 
-    m: f64) 
+    r_arr: &Array1<f64>, 
+    m_arr: &Array1<f64>) 
     -> Particles
 {
     // Check that the particles can fit within the box
     // This is a naîve assertion:
     // Note: If this is only barely true, the 
     // initialization will take a very long time.
-    assert!((x_max - x_min) * (_y_max - _y_min) 
-        > 4.*std::f64::consts::PI*r*r*n as f64, 
-        "{} particles of radius {} will not fit within the box", n, r);
+    
+    let mut area: f64 = 0.;
+    for i in 0..n_arr.len()
+    {
+        area += n_arr[i] as f64 * r_arr[i].powi(2);
+    }
+    area *= 2.*std::f64::consts::PI;
+
+    assert!(
+        (x_max - x_min) * (_y_max - _y_min) > 2.*area, 
+        "{} particles have a total area of {}, and will \
+         not fit within the box", n_arr.sum(), area);
 
     // Y_min and y_max are not currently used, 
     // but could be implemented for a rectangular box.
@@ -150,40 +207,72 @@ pub fn generate_particles(
         unimplemented!("Rectangular box size is not implemented.");
     }
 
+    let n = n_arr.sum();
+    let positions = Array2::random((2, n), Uniform::new(x_min, x_max));
+
+    let angles = Array1::random(n, Uniform::new(0., 2.*std::f64::consts::PI));
+    let mut velocities = stack_new_axis![Axis(0), angles, angles];
+
+    let v_0 = parameters::V_0;
+    velocities.slice_mut(s![0,..]).mapv_inplace(|a| v_0*a.cos());
+    velocities.slice_mut(s![1,..]).mapv_inplace(|a| v_0*a.sin());
+
+    let mut radii = Array1::zeros(n);
+    let mut masses = Array1::zeros(n);
+
+    for i in 0..n_arr.len()
+    {
+        for j in 0..n_arr[i]
+        {
+            if i != 0
+            {
+                radii[n_arr[i-1] + j] = r_arr[i];
+                masses[n_arr[i-1] + j] = m_arr[i];
+            }
+            else
+            {
+                radii[j] = r_arr[i];
+                masses[j] = m_arr[i];
+            }
+               
+        }
+    }
+
     let mut particles = Particles { 
-        pos: Array2::random((2, n), Uniform::new(x_min, x_max)),
-        vel: Array2::random((2, n), Uniform::new(0., 2.*std::f64::consts::PI)),
-        r: Array1::from_elem(n, r),
-        m: Array1::from_elem(n, m),
+        pos: positions,
+        vel: velocities,
+        r: radii,
+        m: masses,
         collision_count: Array1::zeros(n),
     };
 
-    let v_0 = parameters::V_0;
-    particles.vel.slice_mut(s![0,..]).mapv_inplace(|a| v_0*a.cos());
-    particles.vel.slice_mut(s![1,..]).mapv_inplace(|a| v_0*a.sin());
-    // if particles spawn at an unphysical location,
-    // negative collision times are generated.
-    // TODO: Check if particles overlap with other
-    // particles or walls.
+    replace_overlapping_particles(&mut particles, x_min, x_max);
+    return particles;
+}
 
+
+fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f64)
+{
     let mut rng = thread_rng();
     let mut replaces: i16 = 0;
-    for i in 0..n
+    println!("Replacing overlapping particles.");
+    for i in 0..particles.get_len()
     {
+        simulation::status_bar(i, particles.get_len());
         while !particles.is_within_box(i) || particles.is_overlapping(i)
         {
             particles.pos[[0,i]] = rng.sample(Uniform::new(x_min, x_max));
             particles.pos[[1,i]] = rng.sample(Uniform::new(x_min, x_max));
 
             replaces += 1;
-            if replaces >= 5 * particles.get_len() as i16
+            if replaces >= 10 * particles.get_len() as i16
             {
-                println!("Particles have been replaced a lot now. Condider cancelling.");
+                panic!("Replacing particles took too long.\
+                Are you sure there is enough space?");
             }
         }
     }
-    println!("Number of times a particle was replaced: {}", replaces);
-    return particles;
+    println!("Number of times a particle was replaced: {}\n", replaces);
 }
 
 

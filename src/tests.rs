@@ -13,6 +13,7 @@ pub fn test_main()
     test_two_particles();
     test_collision_angle();
     test_many_particles();
+    test_some_particles();
 }
 
 
@@ -22,8 +23,8 @@ fn test_one_particle()
     {
         pos: arr2(&[[0.2], [0.5]]),
         vel: arr2(&[[1.], [1.]]),
-        r: Array1::from_elem(1, parameters::R),
-        m: Array1::from_elem(1, parameters::M),
+        r: Array1::from_elem(1, 0.01),
+        m: Array1::from_elem(1, 0.01),
         collision_count: Array1::zeros(1),
     };
 
@@ -33,7 +34,7 @@ fn test_one_particle()
     println!("Behaving correctly, it should collide with \
     all four walls before returning to it's starting point \
     (x, y) = ({}, {})", 0.5, 0.5);
-    simulation::evolve_system(&mut p, &mut q, 5, 0., true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], true);
 
 }
 
@@ -43,8 +44,8 @@ fn test_two_particles()
     {
         pos: arr2(&[[0.3, 0.7], [0.5, 0.5]]),
         vel: arr2(&[[1., -1.], [0., 0.]]),
-        r: Array1::from_elem(2, parameters::R),
-        m: Array1::from_elem(2, parameters::M),
+        r: Array1::from_elem(2, 0.01),
+        m: Array1::from_elem(2, 0.01),
         collision_count: Array1::zeros(2),
     };
 
@@ -53,7 +54,7 @@ fn test_two_particles()
     println!("Running simulation with two particles.");
     println!("Behaving correctly, thay should collide with \
     each other, then the walls, repeatedly.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0., true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], true);
 }
 
 
@@ -73,25 +74,46 @@ fn test_collision_angle()
     particles of vastly different size.");
     println!("Behaving correctly, they should collide with \
     each other, then the smaller particle will change direction.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0., true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![1., 1e6], true);
 }
+
+fn test_some_particles()
+{
+    let mut p = particle::generate_particles(
+        &array![10],
+        parameters::X_MIN,
+        parameters::X_MAX,
+        parameters::Y_MIN,
+        parameters::Y_MAX,
+        &array![0.01],
+        &array![1.]);
+    let mut q = simulation::fill_queue(&p, 0.);
+    println!("Running simulation with a small number of particles.");
+    println!("Velocity and collision data will be printed.");
+    let (energy, speeds) = simulation::evolve_system(&mut p ,&mut q, 5, 0., &array![0.01], true);
+    plotting::plot_energy(&energy);
+    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+}
+
+
 
 // Generates particles and plots the total kinetic energy of the system.
 fn test_many_particles()
 {
     let mut p = particle::generate_particles(
-        100,
+        &array![100],
         parameters::X_MIN,
         parameters::X_MAX,
         parameters::Y_MIN,
         parameters::Y_MAX,
-        parameters::R,
-        parameters::M,);
+        &array![0.01],
+        &array![1.]);    
     let mut q = simulation::fill_queue(&p, 0.);
     println!("Running simulation with many particles.");
     println!("Energy should remain constant.");
-    let system_data = simulation::evolve_system(&mut p ,&mut q, 500, 0., false);
-    plotting::plot_stats(system_data.slice(s![0,..]), system_data.slice(s![1,..]));
+    let (energy, speeds) = simulation::evolve_system(&mut p ,&mut q, 500, 0., &array![0.01], false);
+    plotting::plot_energy(&energy);
+    plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
 }
 
 
