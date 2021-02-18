@@ -27,14 +27,14 @@ fn test_one_particle()
         m: Array1::from_elem(1, 0.01),
         collision_count: Array1::zeros(1),
     };
-
+    let xi = 1.0;
     let mut q = simulation::fill_queue(&p, 0.);
     
     println!("Running simulation with one particle.");
     println!("Behaving correctly, it should collide with \
     all four walls before returning to it's starting point \
     (x, y) = ({}, {})", 0.5, 0.5);
-    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], xi, true);
 
 }
 
@@ -48,13 +48,13 @@ fn test_two_particles()
         m: Array1::from_elem(2, 0.01),
         collision_count: Array1::zeros(2),
     };
-
+    let xi = 1.0;
     let mut q = simulation::fill_queue(&p, 0.);
     
     println!("Running simulation with two particles.");
     println!("Behaving correctly, thay should collide with \
     each other, then the walls, repeatedly.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], xi, true);
 }
 
 
@@ -68,13 +68,14 @@ fn test_collision_angle()
         m: arr1(&[1., 1e6]),
         collision_count: Array1::zeros(2),       
     };
+    let xi = 1.0;
     let mut q = simulation::fill_queue(&p, 0.);
     
     println!("Running simulation with two \
     particles of vastly different size.");
     println!("Behaving correctly, they should collide with \
     each other, then the smaller particle will change direction.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![1., 1e6], true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![1., 1e6], xi, true);
 }
 
 fn test_some_particles()
@@ -87,10 +88,11 @@ fn test_some_particles()
         parameters::Y_MAX,
         &array![0.01],
         &array![1.]);
+    let xi = 1.0;
     let mut q = simulation::fill_queue(&p, 0.);
     println!("Running simulation with a small number of particles.");
     println!("Velocity and collision data will be printed.");
-    let (energy, _speeds) = simulation::evolve_system(&mut p ,&mut q, 5, 0., &array![0.01], true);
+    let (energy, _speeds) = simulation::evolve_system(&mut p ,&mut q, 5, 0., &array![0.01], xi, true);
     plotting::plot_energy(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
 }
@@ -108,10 +110,11 @@ fn test_many_particles()
         parameters::Y_MAX,
         &array![0.01],
         &array![1.]);    
+    let xi = 1.0;
     let mut q = simulation::fill_queue(&p, 0.);
     println!("Running simulation with many particles.");
     println!("Energy should remain constant.");
-    let (energy, speeds) = simulation::evolve_system(&mut p ,&mut q, 500, 0., &array![0.01], false);
+    let (energy, speeds) = simulation::evolve_system(&mut p ,&mut q, 500, 0., &array![0.01], xi, false);
     plotting::plot_energy(&energy);
     plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
 }

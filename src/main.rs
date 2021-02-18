@@ -12,7 +12,7 @@ fn main()
     match arg
     {
         "test" => tests::test_main(),
-        "simulate" => tasks::task_1(),
+        "simulate" => tasks::tasks_main(),
         _ => panic!("That was probably a typo."),
     }
 }

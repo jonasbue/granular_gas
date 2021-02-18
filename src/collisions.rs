@@ -67,7 +67,7 @@ of particles in a collision"),
 
 
     // Transform the velocities of the particles involved in the collision.
-    pub fn transform_velocity(&self, p: &mut particle::Particles)
+    pub fn transform_velocity(&self, p: &mut particle::Particles, xi: f64)
     {
         // particle_2 is either a particle or a wall.
         // a positive index means particle, a negative means wall
@@ -75,9 +75,6 @@ of particles in a collision"),
         // p_2 can be negative, and must be i16
         let p_1 = self.get_particle_1() as usize;
         let p_2 = self.get_particle_2();
-
-        // Impact parameter XI
-        let xi = parameters::XI;
 
         // Collide with horizontal wall
         if p_2 == -1
@@ -184,10 +181,10 @@ impl CollisionQueue
     // This will not create double entries, because
     // particle 1 and 2 cannot crash twice in a row.
     pub fn resolve_next_collision(
-        &mut self, c: &Collision, mut particles: &mut particle::Particles, t: f64)
+        &mut self, c: &Collision, mut particles: &mut particle::Particles, t: f64, xi: f64)
     {
         //let c = self.pop_next();
-        c.transform_velocity(&mut particles);
+        c.transform_velocity(&mut particles, xi);
         let p_1 = c.particle_1_index;
         let p_2 = c.particle_2_index;
 

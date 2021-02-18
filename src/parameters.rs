@@ -3,10 +3,6 @@ pub const X_MAX: f64 = 1.;
 pub const Y_MIN: f64 = 0.;
 pub const Y_MAX: f64 = 1.;
 
-pub const XI: f64 = 1.; // The impact parameter.
-                        // Not to be confused with the 
-                        // common variable name x_i.
-
 //pub const N: Array1<usize> = array![50, 50];
 pub const V_0: f64 = 1.;
 //pub const R: Array1<f64> = array![0.001, 0.1];

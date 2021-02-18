@@ -272,7 +272,8 @@ fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f
             }
         }
     }
-    println!("\nNumber of times a particle was replaced: {}\n", replaces);
+    print!(" Done.\n");
+    println!("Number of times a particle was replaced: {}", replaces);
 }
 
 

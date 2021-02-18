@@ -7,7 +7,7 @@ use crate::plotting;
 use crate::collisions;
 
 
-pub fn simulate_system(n_arr: &Array1<usize>, r_arr: &Array1<f64>, m_arr: &Array1<f64>)
+pub fn simulate_system(n_arr: &Array1<usize>, r_arr: &Array1<f64>, m_arr: &Array1<f64>, xi: f64)
 -> (Array2<f64>, Array2<f64>)
 {
     let t_0 = parameters::T_0;
@@ -17,7 +17,7 @@ pub fn simulate_system(n_arr: &Array1<usize>, r_arr: &Array1<f64>, m_arr: &Array
 
     println!("Running simulation.");
     let (energy, speeds) 
-        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, false);
+        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, xi, false);
 
     return (energy, speeds);
 }
@@ -29,6 +29,7 @@ pub fn evolve_system(
     number_of_events: usize,
     t_0: f64,
     m_arr: &Array1<f64>,
+    xi: f64,
     test: bool)
     -> (Array2<f64>, Array2<f64>)
 {
@@ -77,9 +78,10 @@ pub fn evolve_system(
             i += 1;
 
             p.propagate(dt);
-            q.resolve_next_collision(&c, &mut p, t);
+            q.resolve_next_collision(&c, &mut p, t, xi);
         }
     }
+    print!(" Done.\n");
 
     for j in 0..p.get_len()
     {
