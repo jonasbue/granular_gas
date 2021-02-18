@@ -58,9 +58,13 @@ pub fn evolve_system(
         speeds[[0, j]] = p.get_speed(j);
     }
 
+    println!("Evolving system.");
     while i < number_of_events
     {
-        status_bar(i, number_of_events);
+        if !test
+        {
+            status_bar(i, number_of_events);
+        }
 
         let c = q.pop_next();
         if c.is_valid(p)
@@ -100,7 +104,7 @@ pub fn evolve_system(
 }
 
 
-fn initiate_system(n: &Array1<usize>, r: &Array1<f64>, m: &Array1<f64>, x_max: f64, y_max: f64) 
+pub fn initiate_system(n: &Array1<usize>, r: &Array1<f64>, m: &Array1<f64>, x_max: f64, y_max: f64) 
 -> particle::Particles
 {
     let p = particle::generate_particles(
@@ -140,7 +144,7 @@ pub fn print_collision_stats(q: &collisions::CollisionQueue)
 }
 
 
-fn print_particle_stats(p: &particle::Particles)
+pub fn print_particle_stats(p: &particle::Particles)
 {
     for i in 0..p.get_len()
     {

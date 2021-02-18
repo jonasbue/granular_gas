@@ -11,13 +11,13 @@ use std::cmp::{Ordering, Eq};
 pub struct Collision
 {
     time: f64,
-    particle_1_index: i16, 
-    particle_2_index: i16,   // Negative values imply that particle_2 is really a wall
+    particle_1_index: i32, 
+    particle_2_index: i32,   // Negative values imply that particle_2 is really a wall
                             // this is interpreted in transform_velocity(), and
                             // the value is set when the collision is enqueued.
 
-    collision_count_1: u16,  // Collision count at the time the collision
-    collision_count_2: u16,  // was detected. When it is resolved, compare
+    collision_count_1: u32,  // Collision count at the time the collision
+    collision_count_2: u32,  // was detected. When it is resolved, compare
                             // with the particles' actual collision count.
 }
 
@@ -28,17 +28,17 @@ impl Collision
         self.time
     }
 
-    pub fn get_particle_1(&self) -> i16
+    pub fn get_particle_1(&self) -> i32
     {
         self.particle_1_index
     }
 
-    pub fn get_particle_2(&self) -> i16
+    pub fn get_particle_2(&self) -> i32
     {
         self.particle_2_index
     }
 
-    pub fn get_collision_count(&self, i: i16) -> u16
+    pub fn get_collision_count(&self, i: i32) -> u32
     {
         match i
         {
@@ -72,7 +72,7 @@ of particles in a collision"),
         // particle_2 is either a particle or a wall.
         // a positive index means particle, a negative means wall
 
-        // p_2 can be negative, and must be i16
+        // p_2 can be negative, and must be i32
         let p_1 = self.get_particle_1() as usize;
         let p_2 = self.get_particle_2();
 
@@ -209,7 +209,7 @@ impl CollisionQueue
     {
         for j in 0..particles.get_len() + 2
         {
-            let c = find_new_collision(particles, i, j as i16 - 2, t, x_max, y_max);
+            let c = find_new_collision(particles, i, j as i32 - 2, t, x_max, y_max);
             if c.get_time().is_finite()
             {
                 self.push_collision(c);
@@ -220,10 +220,10 @@ impl CollisionQueue
 
 
 pub fn find_new_collision(
-    particles: &particle::Particles, i: usize, j: i16, t: f64, x_max: f64, y_max: f64) 
+    particles: &particle::Particles, i: usize, j: i32, t: f64, x_max: f64, y_max: f64) 
     -> Collision
 {
-    let cc_1 = particles.get_collision_count(i as i16);
+    let cc_1 = particles.get_collision_count(i as i32);
     let cc_2 = particles.get_collision_count(j);
 
     let (dt, n) = particles.time_until_next_collisions(i, j, x_max, y_max);
@@ -231,14 +231,14 @@ pub fn find_new_collision(
 }
 
 
-pub fn make_collision(t: f64, p_1: usize, p_2: i16, cc_1: u16, cc_2: u16) 
+pub fn make_collision(t: f64, p_1: usize, p_2: i32, cc_1: u32, cc_2: u32) 
     -> Collision
 {
     assert!(p_2 >= -2);
     Collision 
     { 
         time: t, 
-        particle_1_index: p_1 as i16,
+        particle_1_index: p_1 as i32,
         particle_2_index: p_2, 
         collision_count_1: cc_1,
         collision_count_2: cc_2,

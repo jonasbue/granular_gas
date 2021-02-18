@@ -29,7 +29,7 @@ fn test_one_particle()
     };
     let xi = 1.0;
     let x_max = 1.0;
-    let y_max = 0.5;
+    let y_max = 1.0;
     let mut q = simulation::fill_queue(&p, 0., x_max, y_max);
     
     println!("Running simulation with one particle.");

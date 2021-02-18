@@ -28,6 +28,8 @@ pub fn plot_positions(particles: &particle::Particles, x_max: f64, y_max: f64)
         ])
         .set_x_range(Fix(parameters::X_MIN), Fix(x_max))
         .set_y_range(Fix(parameters::Y_MIN), Fix(y_max));
+
+    println!("Showing figure...");
     match fig.show()
     {
         Ok(show) =>

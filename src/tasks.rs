@@ -1,13 +1,15 @@
 use ndarray::prelude::*;
 use crate::simulation;
 use crate::plotting;
+use crate::particle;
+use crate::parameters;
 
 
 pub fn tasks_main()
 {
-    task_1();
-    task_2();
-    task_3();
+    //task_1();
+    //task_2();
+    //task_3();
     task_4();
 }
 
@@ -75,21 +77,45 @@ fn task_3()
 // Task 4 is different from the previous three.
 // There will be a need to change the other functions.
 fn task_4()
-{
-    let n: Array1<usize> = array![100];
-    let r: Array1<f64> = array![0.01];
-    let m: Array1<f64> = array![0.01];
+{   
+    let x_max = 1.0;
+    let mut y_max = 0.5;
+
+    // A particle with radius 0 will never collide with other particles.
+    let wall_amount: usize = 500;
+    let wall_radius = 0.01;
+
+    let projectile_mass: f64 = 10.;
+    let n: Array1<usize> = array![wall_amount, 1];
+    let r: Array1<f64> = array![wall_radius, 0.0];
+    let m: Array1<f64> = array![0.01, projectile_mass];
 
     let xi = 1.0;
-    let x_max = 1.0;
-    let y_max = 0.5;
     print_task_info(4, &n, &r, &m);
-    let (particles, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
 
-    plotting::plot_energy(&energy);
-    plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+    // Both initiate_system and evolve_system 
+    // work well, even for high packing fractions.
+    // If more speed is needed, initiating the 
+    // system with a grid and then propagating might be faster.
+    let mut particles = simulation::initiate_system(&n, &r, &m, x_max, y_max);
 
-    plotting::plot_positions(&particles, x_max, 1.0);
+    println!("Packing fraction of particles: {}", 
+        particle::get_packing_fraction(&n, &r, 0., x_max, 0., y_max));
+
+    y_max = 1.0;
+    particles.stop_all_particles();
+    particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -parameters::V_0, 0.1, 10.);
+    let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
+
+    //plotting::plot_positions(&particles, x_max, 1.0);
+    let (energy, speed) = simulation::evolve_system(&mut particles, &mut q, 1000, 0., &m, xi, x_max, y_max, false);
+    //plotting::plot_positions(&particles, x_max, 1.0);
+
+
+
+    //plotting::plot_energy(&energy);
+    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+
     println!("");
 
 
@@ -105,7 +131,7 @@ fn print_task_info(task: usize, n: &Array1<usize>, r: &Array1<f64>, m: &Array1<f
     println!("-------------------------------");
     for i in 0..n.len()
     {
-        println!("{}\t{}\t{}", n[i], m[i], r[i]);
+        println!("{}\t{}\t{}", n[i], r[i], m[i]);
     }
     println!("-------------------------------");
 }

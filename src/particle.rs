@@ -24,7 +24,7 @@ pub struct Particles
     pub vel: Array2<f64>,
     pub r: Array1<f64>,
     pub m: Array1<f64>,
-    pub collision_count: Array1<u16> // Number of times each 
+    pub collision_count: Array1<u32> // Number of times each 
                                     // particle has collided
 }
 
@@ -36,7 +36,7 @@ impl Particles
         self.r.len()
     }
 
-    pub fn get_collision_count(&self, index: i16) -> u16
+    pub fn get_collision_count(&self, index: i32) -> u32
     {
         assert!(index >= -2);
         match index
@@ -51,7 +51,7 @@ impl Particles
         let mut cc: f64 = 0.;
         for i in 0..self.get_len()
         {
-            cc += self.get_collision_count(i as i16) as f64;
+            cc += self.get_collision_count(i as i32) as f64;
         }
         cc
     }
@@ -98,14 +98,30 @@ impl Particles
             + self.vel[[1, i]].powi(2)).sqrt();
     }
 
+
     pub fn stop_all_particles(&mut self)
     {
         self.vel = Array2::zeros((2, self.get_len()))
     }
 
 
-    pub fn time_until_next_collisions(&self, i: usize, j: i16, x_max: f64, y_max: f64) 
-        -> (f64, i16)
+    pub fn set_particle_state(&mut self, i: usize,
+        x: f64, y: f64, vx: f64, vy: f64, r: f64, m: f64)
+    {
+        println!("WARNING: A particle was edited manually.");
+        self.pos[[0, i]] = x;
+        self.pos[[1, i]] = y;
+        self.vel[[0, i]] = vx;
+        self.vel[[1, i]] = vy;
+    
+        self.r[i] = r;
+        self.m[i] = m;
+        self.collision_count[i] = 0;
+    }
+
+
+    pub fn time_until_next_collisions(&self, i: usize, j: i32, x_max: f64, y_max: f64) 
+        -> (f64, i32)
     {
         assert!(j >= -2, "Undefined index for particle 2 encountered.");
         match j 
@@ -200,17 +216,9 @@ pub fn generate_particles(
     // Note: If this is only barely true, the 
     // initialization will take a very long time.
     
-    let mut area: f64 = 0.;
-    for i in 0..n_arr.len()
-    {
-        area += n_arr[i] as f64 * r_arr[i].powi(2);
-    }
-    area *= 2.*std::f64::consts::PI;
-
-    assert!(
-        (x_max - x_min) * (y_max - y_min) > 2.*area, 
-        "{} particles have a total area of {}, and will \
-         not fit within the box", n_arr.sum(), area);
+    let pf = get_packing_fraction(n_arr, r_arr, x_min, y_min, x_max, y_max);
+    assert!(pf < 1., "The particles have a packing fraction of {}, \
+    and they will not fit in the system.", pf);
 
     let n = n_arr.sum();
     let positions: Array2<f64> = stack_new_axis![Axis(0), 
@@ -262,7 +270,7 @@ pub fn generate_particles(
 fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f64, y_min: f64, y_max: f64)
 {
     let mut rng = thread_rng();
-    let mut replaces: i16 = 0;
+    let mut replaces: i32 = 0;
     println!("Replacing overlapping particles.");
     for i in 0..particles.get_len()
     {
@@ -273,11 +281,13 @@ fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f
             particles.pos[[1,i]] = rng.sample(Uniform::new(y_min, y_max));
 
             replaces += 1;
-            if replaces >= 10 * particles.get_len() as i16
+            /*
+            if replaces >= 10 * particles.get_len() as i32
             {
                 panic!("Replacing particles took too long.\
                 Are you sure there is enough space?");
             }
+            */
         }
     }
     print!(" Done.\n");
@@ -331,6 +341,7 @@ fn particle_collision_time(
     }
 }
 
+
 pub fn calculate_impact_stats(
     pos: &Array2::<f64>, vel: &Array2::<f64>, 
     r: &Array1::<f64>, i: usize, j: usize) 
@@ -354,6 +365,26 @@ pub fn calculate_impact_stats(
 
     return (r_ij_squared, d, dv.dot(&dx), dx.dot(&dx), dv.dot(&dv), dx);
 }
+
+
+pub fn get_packing_fraction(
+    n_arr: &Array1<usize>, r_arr: &Array1<f64>, 
+    x_min: f64, 
+    x_max: f64, 
+    y_min: f64, 
+    y_max: f64) -> f64
+{
+    let mut area: f64 = 0.;
+    let box_area: f64 = (x_max - x_min) * (y_max - y_min);
+    for i in 0..n_arr.len()
+    {
+        area += n_arr[i] as f64 * r_arr[i].powi(2);
+    }
+    area *= 2.*std::f64::consts::PI;
+    return area/box_area;
+}
+
+
 
 /*
 pub fn particles_to_file(p: &Particles, filename: &str) -> Result<(), Box< dyn Error>>
