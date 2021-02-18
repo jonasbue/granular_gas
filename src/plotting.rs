@@ -8,7 +8,7 @@ use crate::parameters;
 use ndarray::s;
 use ndarray::prelude::*;
 
-pub fn plot_positions(particles: &particle::Particles)
+pub fn plot_positions(particles: &particle::Particles, x_max: f64, y_max: f64)
 {
     let mut fig = Figure::new();
     //let mut dv = particles.pos;
@@ -26,31 +26,8 @@ pub fn plot_positions(particles: &particle::Particles)
             PointSymbol('O'),               // set by hand to give the
                                             // particles the right size.
         ])
-        .set_x_range(Fix(parameters::X_MIN), Fix(parameters::X_MAX))
-        .set_y_range(Fix(parameters::Y_MIN), Fix(parameters::Y_MAX));
-        /*
-        .points(
-            dv.slice(s![0,..]),
-            dv.slice(s![1,..]),
-            &[Color("black"), 
-            PointSize(parameters::R * 100. / parameters::N as f64),
-            PointSymbol('O'),
-        ]);
-        */
-        /*
-        // There should be an arrows()-function in gnuplot
-        .arrow(
-            Axis(particles.pos[[0,..]]),
-            Axis(particles.pos[[1,..]]),
-            Axis(particles.pos[[0,..]] + 10. * particles.vel[[0,..]]),
-            Axis(particles.pos[[1,..]] + 10. * particles.vel[[1,..]]),
-            &[
-                Color("black"),
-                ArrowType(Filled),
-                ArrowSize(1.0),
-            ]);
-        */
-
+        .set_x_range(Fix(parameters::X_MIN), Fix(x_max))
+        .set_y_range(Fix(parameters::Y_MIN), Fix(y_max));
     match fig.show()
     {
         Ok(show) =>

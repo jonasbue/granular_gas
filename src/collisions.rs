@@ -170,18 +170,24 @@ impl CollisionQueue
     // Iterates through all existing particles, and
     // adds all expected collisions to CollisionQueue.
     // This will create double entries.
-    pub fn fill_collision_queue(&mut self, particles: &particle::Particles, t_0: f64)
+    pub fn fill_collision_queue(&mut self, particles: &particle::Particles, t_0: f64, x_max: f64, y_max: f64)
     {
         for i in 0..particles.get_len()
         {
-            self.add_new_collisions(particles, i, t_0);
+            self.add_new_collisions(particles, i, t_0, x_max, y_max);
         }
     }
 
     // This will not create double entries, because
     // particle 1 and 2 cannot crash twice in a row.
     pub fn resolve_next_collision(
-        &mut self, c: &Collision, mut particles: &mut particle::Particles, t: f64, xi: f64)
+        &mut self, 
+        c: &Collision, 
+        mut particles: &mut particle::Particles, 
+        t: f64, 
+        xi: f64, 
+        x_max: f64, 
+        y_max: f64)
     {
         //let c = self.pop_next();
         c.transform_velocity(&mut particles, xi);
@@ -189,21 +195,21 @@ impl CollisionQueue
         let p_2 = c.particle_2_index;
 
         assert!(p_1 >= 0);
-        self.add_new_collisions(particles, p_1 as usize, t);
+        self.add_new_collisions(particles, p_1 as usize, t, x_max, y_max);
         
         if p_2 >= 0 && p_2 != p_1
         {
-            self.add_new_collisions(particles, p_2 as usize, t);
+            self.add_new_collisions(particles, p_2 as usize, t, x_max, y_max);
         }
     }
 
 
     pub fn add_new_collisions(
-        &mut self, particles: &particle::Particles, i: usize, t: f64)
+        &mut self, particles: &particle::Particles, i: usize, t: f64, x_max: f64, y_max: f64)
     {
         for j in 0..particles.get_len() + 2
         {
-            let c = find_new_collision(particles, i, j as i16 - 2, t);
+            let c = find_new_collision(particles, i, j as i16 - 2, t, x_max, y_max);
             if c.get_time().is_finite()
             {
                 self.push_collision(c);
@@ -214,13 +220,13 @@ impl CollisionQueue
 
 
 pub fn find_new_collision(
-    particles: &particle::Particles, i: usize, j: i16, t: f64) 
+    particles: &particle::Particles, i: usize, j: i16, t: f64, x_max: f64, y_max: f64) 
     -> Collision
 {
     let cc_1 = particles.get_collision_count(i as i16);
     let cc_2 = particles.get_collision_count(j);
 
-    let (dt, n) = particles.time_until_next_collisions(i, j);
+    let (dt, n) = particles.time_until_next_collisions(i, j, x_max, y_max);
     return make_collision(t + dt, i as usize, n, cc_1, cc_2);
 }
 

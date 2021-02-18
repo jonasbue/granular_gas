@@ -8,11 +8,11 @@ mod tasks;
 
 fn main() 
 {
-    let arg = "simulate";
+    let arg = "sim";
     match arg
     {
         "test" => tests::test_main(),
-        "simulate" => tasks::tasks_main(),
+        "sim" => tasks::tasks_main(),
         _ => panic!("That was probably a typo."),
     }
 }

@@ -7,19 +7,25 @@ use crate::plotting;
 use crate::collisions;
 
 
-pub fn simulate_system(n_arr: &Array1<usize>, r_arr: &Array1<f64>, m_arr: &Array1<f64>, xi: f64)
--> (Array2<f64>, Array2<f64>)
+pub fn simulate_system(
+    n_arr: &Array1<usize>, 
+    r_arr: &Array1<f64>, 
+    m_arr: &Array1<f64>, 
+    xi: f64, 
+    x_max: f64, 
+    y_max: f64)
+-> (particle::Particles, Array2<f64>, Array2<f64>)
 {
     let t_0 = parameters::T_0;
-    let mut p = initiate_system(n_arr, r_arr, m_arr);
-    let mut q = fill_queue(&p, t_0);
+    let mut p = initiate_system(n_arr, r_arr, m_arr, x_max, y_max);
+    let mut q = fill_queue(&p, t_0, x_max, y_max);
     let n = parameters::NUMBER_OF_COLLISIONS;
 
     println!("Running simulation.");
     let (energy, speeds) 
-        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, xi, false);
+        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, xi, x_max, y_max, false);
 
-    return (energy, speeds);
+    return (p, energy, speeds);
 }
 
 
@@ -30,6 +36,8 @@ pub fn evolve_system(
     t_0: f64,
     m_arr: &Array1<f64>,
     xi: f64,
+    x_max: f64,
+    y_max: f64,
     test: bool)
     -> (Array2<f64>, Array2<f64>)
 {
@@ -61,7 +69,7 @@ pub fn evolve_system(
             {
                 print_particle_stats(&p);
                 print_collision_stats(&q);
-                plotting::plot_positions(&p);
+                plotting::plot_positions(&p, x_max, y_max);
             }
 
             system_data[[0, i]] = t;
@@ -78,7 +86,7 @@ pub fn evolve_system(
             i += 1;
 
             p.propagate(dt);
-            q.resolve_next_collision(&c, &mut p, t, xi);
+            q.resolve_next_collision(&c, &mut p, t, xi, x_max, y_max);
         }
     }
     print!(" Done.\n");
@@ -92,26 +100,26 @@ pub fn evolve_system(
 }
 
 
-fn initiate_system(n: &Array1<usize>, r: &Array1<f64>, m: &Array1<f64>) 
+fn initiate_system(n: &Array1<usize>, r: &Array1<f64>, m: &Array1<f64>, x_max: f64, y_max: f64) 
 -> particle::Particles
 {
     let p = particle::generate_particles(
         n,
-        parameters::X_MIN, 
-        parameters::X_MAX, 
-        parameters::Y_MIN, 
-        parameters::Y_MAX,
+        parameters::X_MIN,
+        x_max,
+        parameters::Y_MIN,
+        y_max,
         r,
         m);
     p
 }
 
 
-pub fn fill_queue(p: &particle::Particles, t_0: f64) 
+pub fn fill_queue(p: &particle::Particles, t_0: f64, x_max: f64, y_max: f64) 
     -> collisions::CollisionQueue
 {
     let mut q = collisions::CollisionQueue::new();
-    q.fill_collision_queue(&p, t_0);
+    q.fill_collision_queue(&p, t_0, x_max, y_max);
 
     println!("Queue filled successfully.");
     return q;

@@ -98,8 +98,13 @@ impl Particles
             + self.vel[[1, i]].powi(2)).sqrt();
     }
 
+    pub fn stop_all_particles(&mut self)
+    {
+        self.vel = Array2::zeros((2, self.get_len()))
+    }
 
-    pub fn time_until_next_collisions(&self, i: usize, j: i16) 
+
+    pub fn time_until_next_collisions(&self, i: usize, j: i16, x_max: f64, y_max: f64) 
         -> (f64, i16)
     {
         assert!(j >= -2, "Undefined index for particle 2 encountered.");
@@ -107,11 +112,11 @@ impl Particles
         {
             -1 =>
                 (wall_collition_time(
-                    self.pos[[1, i]], self.vel[[1, i]], self.r[i]), -1),
+                    self.pos[[1, i]], self.vel[[1, i]], self.r[i], y_max), -1),
 
             -2 =>
                 (wall_collition_time(
-                    self.pos[[0, i]], self.vel[[0, i]], self.r[i]), -2),
+                    self.pos[[0, i]], self.vel[[0, i]], self.r[i], x_max), -2),
 
             _ =>
                 (particle_collision_time(
@@ -133,12 +138,19 @@ impl Particles
 
 
     // Returns true if all particles are located within the box
-    pub fn is_within_box(&self, i: usize) -> bool
+    pub fn is_within_box(
+        &self, 
+        i: usize, 
+        x_min: f64, 
+        x_max: f64, 
+        y_min: f64, 
+        y_max: f64) 
+    -> bool
     {
-        self.pos[[0, i]] > parameters::X_MIN + self.r[i] && 
-        self.pos[[1, i]] > parameters::Y_MIN + self.r[i] && 
-        self.pos[[0, i]] < parameters::X_MAX - self.r[i] &&
-        self.pos[[1, i]] < parameters::Y_MAX - self.r[i]
+        self.pos[[0, i]] > x_min + self.r[i] && 
+        self.pos[[1, i]] > y_min + self.r[i] && 
+        self.pos[[0, i]] < x_max - self.r[i] &&
+        self.pos[[1, i]] < y_max - self.r[i]
     }
 
 
@@ -177,8 +189,8 @@ pub fn generate_particles(
     n_arr: &Array1<usize>, 
     x_min: f64, 
     x_max: f64, 
-    _y_min: f64, 
-    _y_max: f64, 
+    y_min: f64, 
+    y_max: f64, 
     r_arr: &Array1<f64>, 
     m_arr: &Array1<f64>) 
     -> Particles
@@ -196,19 +208,14 @@ pub fn generate_particles(
     area *= 2.*std::f64::consts::PI;
 
     assert!(
-        (x_max - x_min) * (_y_max - _y_min) > 2.*area, 
+        (x_max - x_min) * (y_max - y_min) > 2.*area, 
         "{} particles have a total area of {}, and will \
          not fit within the box", n_arr.sum(), area);
 
-    // Y_min and y_max are not currently used, 
-    // but could be implemented for a rectangular box.
-    if _y_max != x_max
-    {
-        unimplemented!("Rectangular box size is not implemented.");
-    }
-
     let n = n_arr.sum();
-    let positions = Array2::random((2, n), Uniform::new(x_min, x_max));
+    let positions: Array2<f64> = stack_new_axis![Axis(0), 
+        Array1::random(n, Uniform::new(x_min, x_max)),
+        Array1::random(n, Uniform::new(y_min, y_max))];
 
     let angles = Array1::random(n, Uniform::new(0., 2.*std::f64::consts::PI));
     let mut velocities = stack_new_axis![Axis(0), angles, angles];
@@ -220,6 +227,7 @@ pub fn generate_particles(
     let mut radii = Array1::zeros(n);
     let mut masses = Array1::zeros(n);
 
+    // Fill radii and masses with values.
     for i in 0..n_arr.len()
     {
         for j in 0..n_arr[i]
@@ -246,12 +254,12 @@ pub fn generate_particles(
         collision_count: Array1::zeros(n),
     };
 
-    replace_overlapping_particles(&mut particles, x_min, x_max);
+    replace_overlapping_particles(&mut particles, x_min, x_max, y_min, y_max);
     return particles;
 }
 
 
-fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f64)
+fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f64, y_min: f64, y_max: f64)
 {
     let mut rng = thread_rng();
     let mut replaces: i16 = 0;
@@ -259,10 +267,10 @@ fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f
     for i in 0..particles.get_len()
     {
         simulation::status_bar(i, particles.get_len());
-        while !particles.is_within_box(i) || particles.is_overlapping(i)
+        while !particles.is_within_box(i, x_min, x_max, y_min, y_max) || particles.is_overlapping(i)
         {
             particles.pos[[0,i]] = rng.sample(Uniform::new(x_min, x_max));
-            particles.pos[[1,i]] = rng.sample(Uniform::new(x_min, x_max));
+            particles.pos[[1,i]] = rng.sample(Uniform::new(y_min, y_max));
 
             replaces += 1;
             if replaces >= 10 * particles.get_len() as i16
@@ -277,18 +285,25 @@ fn replace_overlapping_particles(particles: &mut Particles, x_min: f64, x_max: f
 }
 
 
-fn wall_collition_time(pos: f64, v: f64, radius: f64) -> f64
+fn wall_collition_time(pos: f64, v: f64, radius: f64, length: f64) -> f64
 {
     // Returns time until particle collides with a wall 
+    // length is the length of the box, given that
+    // two borders are x and y axis, and length > 0.
+    // That is, the box is in the first quadrant.
+    assert!(length > 0.);
+
     let mut delta_t = 0.;
 
-    if v > 0. { delta_t = (1. - radius - pos) / v; }
+    if v > 0. { delta_t = (length - radius - pos) / v; }
     else if v < 0. { delta_t = (radius - pos) / v; }
     else if v == 0. { delta_t = f64::INFINITY; } // This case is redundant
 
     // Invalid positions (outside box or overlap between particles) can
     // give negative times. If a particle hits a corner, this might happen.
-    assert!(delta_t > -1e-5, "Non-positive time computed: delta_t = {}", delta_t);
+    // However, collisions happening simultaneously can get a time slightly
+    // below zero(?), due to numerical inaccuracy.
+    assert!(delta_t > 0., "Non-positive time computed: delta_t = {}", delta_t);
 
     return delta_t;
 }

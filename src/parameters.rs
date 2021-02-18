@@ -1,7 +1,5 @@
 pub const X_MIN: f64 = 0.;
-pub const X_MAX: f64 = 1.;
 pub const Y_MIN: f64 = 0.;
-pub const Y_MAX: f64 = 1.;
 
 //pub const N: Array1<usize> = array![50, 50];
 pub const V_0: f64 = 1.;
