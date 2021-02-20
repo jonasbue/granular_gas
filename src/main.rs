@@ -5,10 +5,11 @@ mod tests;
 mod plotting;
 mod simulation;
 mod tasks;
+mod save_data;
 
 fn main() 
 {
-    let arg = "sim";
+    let arg = "test";
     match arg
     {
         "test" => tests::test_main(),

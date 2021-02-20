@@ -11,12 +11,6 @@ use ndarray_rand::RandomExt;
 use crate::parameters;
 use crate::simulation;
 
-/*
-use csv::{ReaderBuilder, WriterBuilder};
-use ndarray_csv::{Array2Reader, Array2Writer};
-use std::fs::File;
-use std::error::Error;
-*/
 
 pub struct Particles
 {
@@ -313,7 +307,7 @@ fn wall_collition_time(pos: f64, v: f64, radius: f64, length: f64) -> f64
     // give negative times. If a particle hits a corner, this might happen.
     // However, collisions happening simultaneously can get a time slightly
     // below zero(?), due to numerical inaccuracy.
-    assert!(delta_t > 0., "Non-positive time computed: delta_t = {}", delta_t);
+    assert!(delta_t > -1e6, "Non-positive time computed: delta_t = {}", delta_t);
 
     return delta_t;
 }
@@ -386,56 +380,4 @@ pub fn get_packing_fraction(
 
 
 
-/*
-pub fn particles_to_file(p: &Particles, filename: &str) -> Result<(), Box< dyn Error>>
-{
-    for el in Vec!["pos", "vel"] //, "r", "m"]
-    {
-        let f = File::create(filename.to_owned() + "_" + el.to_owned())?;
-        let mut writer = WriterBuilder::new().has_headers(false).from_writer(f);
-        match el
-        {
-            "pos" => writer.serialize_array2(&p.pos)?,
-            "vel" => writer.serialize_array2(&p.vel)?,
-            //"r" => writer.serialize_array1(&p.r)?,
-            //"m" => writer.serialize_array1(&p.m)?,
-            //"cc" => writer.serialize_array1(&p.collision_count)?,
-        }
-    }
-    Ok(())
-}
-*/
 
-/*
-pub fn file_to_particles(filename: &str, n: usize) -> Result<Particles, Box<dyn Error>>
-{
-    let f_pos = File::open(filename.to_owned() + "_pos")?;
-    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
-    let pos_read: Array2<f64> = reader.deserialize_array2((2, n))?;
-
-    let f_vel = File::open(filename.to_owned() + "_vel")?;
-    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
-    let vel_read: Array2<f64> = reader.deserialize_array2((2, n))?;
-
-    /*
-    let f_r = File::open(filename.to_owned() + "_r")?;
-    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
-    let r_read: Array1<f64> = reader.deserialize_array1(n)?;
-
-    let f_m = File::open(filename.to_owned() + "_m")?;
-    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
-    let m_read: Array1<f64> = reader.deserialize_array1(n)?;
-
-    let f_cc = File::open(filename.to_owned() + "_cc")?;
-    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(f);
-    let cc_read: Array1<u16> = reader.deserialize_array1(n)?;
-    */
-
-    Ok(Particles{ 
-        pos: pos_read, 
-        vel: vel_read, 
-        r: r_read, 
-        m: m_read, 
-        collision_count: cc_read })
-}
-*/

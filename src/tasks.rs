@@ -82,7 +82,7 @@ fn task_4()
     let mut y_max = 0.5;
 
     // A particle with radius 0 will never collide with other particles.
-    let wall_amount: usize = 500;
+    let wall_amount: usize = 450;
     let wall_radius = 0.01;
 
     let projectile_mass: f64 = 10.;
@@ -90,7 +90,6 @@ fn task_4()
     let r: Array1<f64> = array![wall_radius, 0.0];
     let m: Array1<f64> = array![0.01, projectile_mass];
 
-    let xi = 1.0;
     print_task_info(4, &n, &r, &m);
 
     // Both initiate_system and evolve_system 
@@ -103,17 +102,20 @@ fn task_4()
         particle::get_packing_fraction(&n, &r, 0., x_max, 0., y_max));
 
     y_max = 1.0;
+    let xi = 0.5;
+    let energy_cutoff_fraction = 0.10;
+    let max_number_of_events = 1000;
+
     particles.stop_all_particles();
-    particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -parameters::V_0, 0.1, 10.);
+    particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -5.*parameters::V_0, 0.1, 10.);
     let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
 
-    //plotting::plot_positions(&particles, x_max, 1.0);
-    let (energy, speed) = simulation::evolve_system(&mut particles, &mut q, 1000, 0., &m, xi, x_max, y_max, false);
-    //plotting::plot_positions(&particles, x_max, 1.0);
+    plotting::plot_positions(&particles, x_max, 1.0);
+    let (energy, speed) = simulation::evolve_system(&mut particles, &mut q, 
+        max_number_of_events, 0., &m, xi, x_max, y_max, energy_cutoff_fraction, false);
 
-
-
-    //plotting::plot_energy(&energy);
+    plotting::plot_positions(&particles, x_max, 1.0);
+    plotting::plot_energy(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
 
     println!("");

@@ -23,7 +23,7 @@ pub fn simulate_system(
 
     println!("Running simulation.");
     let (energy, speeds) 
-        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, xi, x_max, y_max, false);
+        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, xi, x_max, y_max, 0.0, false);
 
     return (p, energy, speeds);
 }
@@ -38,6 +38,7 @@ pub fn evolve_system(
     xi: f64,
     x_max: f64,
     y_max: f64,
+    energy_cutoff_fraction: f64,
     test: bool)
     -> (Array2<f64>, Array2<f64>)
 {
@@ -47,7 +48,7 @@ pub fn evolve_system(
     // system_data contains some data about the system.
     // index 0: time of collisions
     // index 1: kinetic energy at these times
-    let mut system_data: Array2<f64> = Array::zeros((4, number_of_events));
+    let mut system_data: Array2<f64> = Array::zeros((2+m_arr.len(), number_of_events));
 
     // speeds ccontains the speed of each particle
     // before and after simulation.
@@ -59,7 +60,8 @@ pub fn evolve_system(
     }
 
     println!("Evolving system.");
-    while i < number_of_events
+    let e_f = p.get_tot_kinetic_energy() * energy_cutoff_fraction;
+    while i < number_of_events && p.get_tot_kinetic_energy() > e_f
     {
         if !test
         {
