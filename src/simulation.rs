@@ -52,7 +52,7 @@ pub fn evolve_system(
 
     // speeds ccontains the speed of each particle
     // before and after simulation.
-    let mut speeds: Array2<f64> = Array2::zeros((2+m_arr.len(), p.get_len()));
+    let mut speeds: Array2<f64> = Array2::zeros((1+m_arr.len(), p.get_len()));
 
     for j in 0..p.get_len()
     {

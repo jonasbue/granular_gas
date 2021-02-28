@@ -44,6 +44,7 @@ pub fn plot_positions(particles: &particle::Particles, x_max: f64, y_max: f64)
 pub fn plot_stats(t: ArrayView<f64, Ix1>, y: ArrayView<f64, Ix1>)
 {
     let mut fig = Figure::new();
+    println!("{:?}", y);
     fig.axes2d()
         .points(
             t,
@@ -52,7 +53,7 @@ pub fn plot_stats(t: ArrayView<f64, Ix1>, y: ArrayView<f64, Ix1>)
             PointSize(3.),
             ])
         .set_x_range(Fix(0.), Fix(2.))
-        //.set_y_range(Fix(0.), Fix(60.))
+        .set_y_range(Fix(0.), Fix(6.))
         ;
 
     match fig.show()
@@ -67,22 +68,52 @@ pub fn plot_stats(t: ArrayView<f64, Ix1>, y: ArrayView<f64, Ix1>)
 
 }
 
-pub fn plot_energy(e: &Array2<f64>)
+pub fn plot_energy_single_mass(e: &Array2<f64>)
 {
     let mut fig = Figure::new();
     fig.axes2d()
-        .lines(
+        // Total energy
+        .lines( 
             e.slice(s![0,..]),
             e.slice(s![1,..]),
             &[Color("black"),
             LineWidth(3.),
             ])
+        .set_y_range(Fix(0.), Fix(500.))
+        //.set_y_range(Fix(0.), Fix(60.))
+        ;
+
+    match fig.show()
+    {
+        Ok(show) =>
+        {
+            println!("Figure rendered correctly");
+            drop(show);
+        }
+        Err(gnu_error) => println!("Figure could not be rendered: {:?}", gnu_error),
+    };
+}
+ 
+pub fn plot_energy_two_masses(e: &Array2<f64>)
+{
+    let mut fig = Figure::new();
+    fig.axes2d()
+        // Total energy
+        .lines( 
+            e.slice(s![0,..]),
+            e.slice(s![1,..]),
+            &[Color("black"),
+            LineWidth(3.),
+            ])
+        // Energy of first particle mass
         .lines(
             e.slice(s![0,..]),
             e.slice(s![2,..]),
             &[Color("red"),
             LineWidth(3.),
             ])
+        // Energy of second particle mass
+        // This will give an out of range error if all particles are the same.
          .lines(
             e.slice(s![0,..]),
             e.slice(s![3,..]),
@@ -102,6 +133,5 @@ pub fn plot_energy(e: &Array2<f64>)
         }
         Err(gnu_error) => println!("Figure could not be rendered: {:?}", gnu_error),
     };
-
 }
  

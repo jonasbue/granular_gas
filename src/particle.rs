@@ -364,8 +364,8 @@ pub fn calculate_impact_stats(
 pub fn get_packing_fraction(
     n_arr: &Array1<usize>, r_arr: &Array1<f64>, 
     x_min: f64, 
-    x_max: f64, 
     y_min: f64, 
+    x_max: f64, 
     y_max: f64) -> f64
 {
     let mut area: f64 = 0.;

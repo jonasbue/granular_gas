@@ -10,11 +10,12 @@ use crate::save_data;
 pub fn test_main()
 {
     assert_correct_impact_stats();
-    test_one_particle();
+    //test_one_particle();
     //test_two_particles();
     //test_collision_angle();
     //test_some_particles();
     //test_many_particles();
+    test_save_data();
 }
 
 
@@ -32,7 +33,6 @@ fn test_one_particle()
     let x_max = 1.0;
     let y_max = 1.0;
     let mut q = simulation::fill_queue(&p, 0., x_max, y_max);
-    save_data::particles_to_file(&p, "save_test");
     
     println!("Running simulation with one particle.");
     println!("Behaving correctly, it should collide with \
@@ -105,7 +105,7 @@ fn test_some_particles()
     let (energy, _speeds) = simulation::evolve_system(
         &mut p,&mut q, 5, 0., &array![0.01], xi, x_max, y_max, 0.0, true);
 
-    plotting::plot_energy(&energy);
+    plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
 }
 
@@ -113,8 +113,8 @@ fn test_some_particles()
 // Generates particles and plots the total kinetic energy of the system.
 fn test_many_particles()
 {
-    let x_max = 1.5;
-    let y_max = 0.4;
+    let x_max = 1.0;
+    let y_max = 1.0;
 
     let mut p = particle::generate_particles(
         &array![100],
@@ -122,18 +122,49 @@ fn test_many_particles()
         x_max,
         parameters::Y_MIN,
         y_max,
-        &array![0.01],
+        &array![0.001],
+        &array![1.]);    
+    let xi = 1.0;
+    let mut q = simulation::fill_queue(&p, 0., x_max, y_max);
+    println!("Running simulation with many particles.");
+    println!("Energy should remain constant.");
+    let (energy, _speeds) = simulation::evolve_system(
+        &mut p ,&mut q, 500, 0., &array![0.01], xi, x_max, y_max, 0.0, false);
+
+    //save_data::particles_to_file(&p, "save_test");
+    plotting::plot_energy_single_mass(&energy);
+    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+}
+
+
+// Generates particles and plots the total kinetic energy of the system.
+fn test_save_data()
+{
+    let x_max = 1.0;
+    let y_max = 1.0;
+
+    let mut p = particle::generate_particles(
+        &array![100],
+        parameters::X_MIN,
+        x_max,
+        parameters::Y_MIN,
+        y_max,
+        &array![0.001],
         &array![1.]);    
     let xi = 1.0;
     let mut q = simulation::fill_queue(&p, 0., x_max, y_max);
     println!("Running simulation with many particles.");
     println!("Energy should remain constant.");
     let (energy, speeds) = simulation::evolve_system(
-        &mut p ,&mut q, 500, 0., &array![0.01], xi, x_max, y_max, 0.0, false);
-    plotting::plot_energy(&energy);
-    plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
-}
+        &mut p ,&mut q, 50, 0., &array![0.01], xi, x_max, y_max, 0.0, false);
 
+    let filename = "save_test";
+    save_data::particles_to_file(&p, filename);
+    save_data::energy_to_file(&energy, filename);
+    save_data::speed_to_file(&speeds, filename);
+    plotting::plot_energy_single_mass(&energy);
+    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+}
 
 // Asserts that the collision function works properly
 // on one special case.

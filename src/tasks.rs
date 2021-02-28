@@ -7,7 +7,7 @@ use crate::parameters;
 
 pub fn tasks_main()
 {
-    //task_1();
+    task_1();
     //task_2();
     //task_3();
     task_4();
@@ -25,8 +25,8 @@ fn task_1()
     print_task_info(1, &n, &r, &m);
     let (_p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
 
-    plotting::plot_energy(&energy);
-    plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+    plotting::plot_energy_single_mass(&energy);
+    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
     println!("");
 
 }
@@ -44,8 +44,8 @@ fn task_2()
     print_task_info(2, &n, &r, &m);
     let (_p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
 
-    plotting::plot_energy(&energy);
-    plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+    plotting::plot_energy_single_mass(&energy);
+    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
     println!("");
 }
 
@@ -68,8 +68,8 @@ fn task_3()
         println!("Restitution coefficient Xi = {}", xi);
         let (_p, energy, speeds) = simulation::simulate_system(&n, &r, &m, *xi, x_max, y_max);
 
-        plotting::plot_energy(&energy);
-        plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+        plotting::plot_energy_two_masses(&energy);
+        //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
         println!("");
     }
 }
@@ -99,7 +99,7 @@ fn task_4()
     let mut particles = simulation::initiate_system(&n, &r, &m, x_max, y_max);
 
     println!("Packing fraction of particles: {}", 
-        particle::get_packing_fraction(&n, &r, 0., x_max, 0., y_max));
+        particle::get_packing_fraction(&n, &r, 0., 0., x_max, y_max));
 
     y_max = 1.0;
     let xi = 0.5;
@@ -115,8 +115,8 @@ fn task_4()
         max_number_of_events, 0., &m, xi, x_max, y_max, energy_cutoff_fraction, false);
 
     plotting::plot_positions(&particles, x_max, 1.0);
-    plotting::plot_energy(&energy);
-    //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+    plotting::plot_energy_two_masses(&energy);
+    ////plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
 
     println!("");
 

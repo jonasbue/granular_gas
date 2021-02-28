@@ -1,7 +1,9 @@
+use ndarray::prelude::*;
+
 use std::vec::Vec;
 use std::error::Error;
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::{Write};
 use std::path::Path;
 use std::env;
 
@@ -10,7 +12,6 @@ use crate::particle;
 pub fn particles_to_file(p: &particle::Particles, filename: &str) 
 -> Result<(), Box<dyn Error>>
 {
-    println!("I'm running...");
     let mut data: Vec<Vec<f64>> = vec![
         p.pos.row(0).to_vec(),
         p.pos.row(1).to_vec(),
@@ -23,20 +24,73 @@ pub fn particles_to_file(p: &particle::Particles, filename: &str)
     let wd = env::current_dir().unwrap().display().to_string();
     let path_name = wd + &"/../data/".to_owned() + &filename.to_owned() + "_particles.csv";
     let path = Path::new(&path_name);
-    let mut f = File::create(&path).unwrap()?;
+    let mut f = File::create(&path).expect("Could not open file.");
 
-    write!(f, "x,y,v_x,v_y,radius,mass,count\n")?;
-    for el in data.iter()
+    write!(f, "x\ty\tv_x\tv_y\tradius\tmass\tcount\n")?;
+    for i in 0..p.get_len()
     {
-        for val in el.iter()
+        for j in 0..7
         {
-            write!(f, "{}\t", val)?;
+            write!(f, "{:?}\t", data[j][i])?;
         }
+        write!(f, "\n");
     }
     println!("Data saved succesfully to file:\n{}", path_name);
     Ok(())
 }
 
+pub fn speed_to_file(data: &Array2<f64>, filename: &str)
+-> Result<(), Box<dyn Error>>
+{
+    let wd = env::current_dir().unwrap().display().to_string();
+    let path_name = wd + &"/../data/".to_owned() + &filename.to_owned() + "_speeds.csv";
+    let path = Path::new(&path_name);
+    let mut f = File::create(&path).expect("Could not open file.");
+
+    for i in 0..data.nrows()
+    {
+        write!(f, "v_{:?}\t", i)?; 
+    }
+    write!(f, "\n")?;
+
+    for i in 0..data.ncols()
+    {
+        for j in 0..data.nrows()
+        {
+            write!(f, "{:?}\t", data[[j, i]])?;
+        }
+        write!(f, "\n");
+    }
+    println!("Data saved succesfully to file:\n{}", path_name);
+    Ok(())
+}
+
+pub fn energy_to_file(data: &Array2<f64>, filename: &str)
+-> Result<(), Box<dyn Error>>
+{
+    let wd = env::current_dir().unwrap().display().to_string();
+    let path_name = wd + &"/../data/".to_owned() + &filename.to_owned() + "_energy.csv";
+    let path = Path::new(&path_name);
+    let mut f = File::create(&path).expect("Could not open file.");
+
+    write!(f, "time\te_tot")?;
+    for i in 0..data.nrows()
+    {
+        write!(f, "\te_{:?}", i)?; 
+    }
+    write!(f, "\n")?;
+
+    for i in 0..data.ncols()
+    {
+        for j in 0..data.nrows()
+        {
+            write!(f, "{:?}\t", data[[j, i]])?;
+        }
+        write!(f, "\n");
+    }
+    println!("Data saved succesfully to file:\n{}", path_name);
+    Ok(())
+}
 /*
 pub fn file_to_particles(filename: &str, n: usize) -> Result<Particles, Box<dyn Error>>
 {
@@ -70,3 +124,5 @@ pub fn file_to_particles(filename: &str, n: usize) -> Result<Particles, Box<dyn 
         collision_count: cc_read })
 }
 */
+
+// TODO: Make a file that saves energy and speeds.
