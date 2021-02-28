@@ -9,7 +9,7 @@ mod save_data;
 
 fn main() 
 {
-    let arg = "test";
+    let arg = "sim";
     match arg
     {
         "test" => tests::test_main(),

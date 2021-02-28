@@ -3,13 +3,14 @@ use crate::simulation;
 use crate::plotting;
 use crate::particle;
 use crate::parameters;
+use crate::save_data;
 
 
 pub fn tasks_main()
 {
     task_1();
-    //task_2();
-    //task_3();
+    task_2();
+    task_3();
     task_4();
 }
 
@@ -23,7 +24,11 @@ fn task_1()
     let x_max = 1.0;
     let y_max = 1.0;
     print_task_info(1, &n, &r, &m);
-    let (_p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
+    let (p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
+
+    save_data::particles_to_file(&p, "task_1");
+    save_data::speed_to_file(&speeds, "task_1");
+    save_data::energy_to_file(&energy, "task_1");
 
     plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
@@ -42,7 +47,11 @@ fn task_2()
     let x_max = 1.0;
     let y_max = 1.0;
     print_task_info(2, &n, &r, &m);
-    let (_p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
+    let (p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
+
+    save_data::particles_to_file(&p, "task_2");
+    save_data::speed_to_file(&speeds, "task_2");
+    save_data::energy_to_file(&energy, "task_2");
 
     plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
@@ -66,8 +75,12 @@ fn task_3()
     for xi in [1.0, 0.9, 0.8].iter()
     {
         println!("Restitution coefficient Xi = {}", xi);
-        let (_p, energy, speeds) = simulation::simulate_system(&n, &r, &m, *xi, x_max, y_max);
+        let (p, energy, speeds) 
+            = simulation::simulate_system(&n, &r, &m, *xi, x_max, y_max);
 
+        save_data::particles_to_file(&p, &format!("{}{}", "task_3", xi));
+        save_data::speed_to_file(&speeds, &format!("{}{}", &"task_3", xi));
+        save_data::energy_to_file(&energy, &format!("{}{}", &"task_3", xi));
         plotting::plot_energy_two_masses(&energy);
         //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
         println!("");
@@ -90,6 +103,7 @@ fn task_4()
     let r: Array1<f64> = array![wall_radius, 0.0];
     let m: Array1<f64> = array![0.01, projectile_mass];
 
+
     print_task_info(4, &n, &r, &m);
 
     // Both initiate_system and evolve_system 
@@ -111,8 +125,12 @@ fn task_4()
     let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
 
     plotting::plot_positions(&particles, x_max, 1.0);
-    let (energy, speed) = simulation::evolve_system(&mut particles, &mut q, 
+    let (energy, speeds) = simulation::evolve_system(&mut particles, &mut q, 
         max_number_of_events, 0., &m, xi, x_max, y_max, energy_cutoff_fraction, false);
+
+    save_data::particles_to_file(&particles, "task_4");
+    save_data::speed_to_file(&speeds, "task_4");
+    save_data::energy_to_file(&energy, "task_4");
 
     plotting::plot_positions(&particles, x_max, 1.0);
     plotting::plot_energy_two_masses(&energy);
