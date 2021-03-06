@@ -1,6 +1,9 @@
 \documentclass{article}
 \usepackage[right=2cm, left=2cm, top=2cm, bottom=2cm]{geometry}
 \usepackage{pgfplots}
+%\pgfplotsset{width=7cm,compat=1.17}\usepgfplotslibrary{statistics}
+\usepgfplotslibrary{units}
+\usepgfplotslibrary{groupplots}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The following allows combinations of single
@@ -30,61 +33,149 @@ This report summarizes a computational experiment where a two dimensional granul
 \begin{multicols}{2}
 \section{Introduction}
 
-A granular gas is a two dimensional model in which a gas is represented by circular particles of finite raadii and masses, that can collide elastically or inellastically.
+A granular gas is a two dimensional model in which a gas is represented by circular particles of finite radii and masses, that can collide elastically or inellastically.
 In this report, some results from simulations of suh a gas are given.
 The simulations show results that are in agreement with staatistical mechanics.
 
 \section{Theory}
 
 \section{Results}
+
+%% Task 1
 \begin{tikzpicture}
-\begin{axis}[
-    xlabel={Speed [$m/s^2$]},
-    ylabel={Energy},
-]
-\addplot[
-    domain=0:5,
-    samples=100,
-    color=black,
+    \begin{axis}[
+        xlabel={Speed},
+        ylabel={Number of particles},
+        x unit = m/s,
+        ybar interval,
+        xtick=,
+        xtick distance = 1,
+        xmin=0,
+        xmax=6,
+        ymin=0,
+        grid=minor,
     ]
-    {(2*x/1)*exp(-(x^2)/1)};
-\end{axis}
+    \addplot+[
+        hist={bins=40},
+        xtick=\empty,
+    ]
+        table[
+            y =v_0,
+        ]{../data/task_1_speeds.csv};
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Speed},
+        ylabel={Number of particles},
+        x unit = m/s,
+        ybar interval,
+        hist/intervals=true,
+        ymin=0,
+        xtick=,
+        grid=minor,
+    ]
+    \addplot+[hist={bins=12}]
+        table[
+            y =v_1,
+        ]{../data/task_1_speeds.csv};
+    \end{axis}
+
+    \begin{axis}[
+        xtick=\empty,
+        ytick=\empty,
+    ]
+    \addplot[
+        domain=0:10,
+        samples=100,
+        color=black,
+        xtick=\empty,
+        ]
+        {(2*x/0.1)*exp(-((x)^2)/10)};
+        % TODO: Calculate <v> and adjust this ad hoc scaling.
+    \end{axis}
+\end{tikzpicture}
+
+%% Task 2
+\begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Speed},
+        ylabel={Number of particles},
+        x unit = m/s,
+        ybar interval,
+        hist/intervals=true,
+        ymin=0,
+        xtick=,
+        grid=minor,
+    ]
+    \addplot+[hist={bins=12}]
+        table[
+            y = v_1,
+            xtick=\empty,
+        ]{../data/task_2_speeds.csv};
+    \end{axis}
 \end{tikzpicture}
 
 
 \begin{tikzpicture}
-\begin{axis}[
-    xlabel={Speed [$m/s^2$]},
-    ylabel={Number of particles},
-    xmin=0,
-    ybar interval=0.5,
-    bar width=2,
-    enlargelimits=1,
-]
-\addplot table[
-    y expr = \thisrow{v_0},
-    ]{../data/task_1_speeds.csv};
-;
-\addlegendentry{Maxwell distribution}
-\end{axis}
+    \begin{groupplot}[
+        group style={
+            group name = task_2,
+            group size=1 by 2,
+            vertical sep=0pt,
+            xlabels at=edge bottom,
+        },
+        height=6cm,
+        width=\linewidth,
+        ybar interval,
+        separate axis lines,
+        xtick=,
+        xmin=0,
+        xmax=4,
+        ymin=0,
+        ymax=40,
+        ylabel={Number of particles},
+        xlabel={Speed},
+    ]
+
+
+    \nextgroupplot
+        \addplot+[hist={bins=16}]
+            table[
+                y = v_1,
+            ]{../data/task_2_speeds.csv};
+    \nextgroupplot
+        \addplot+[hist={bins=16}]
+            table[
+                y = v_2,
+            ]{../data/task_2_speeds.csv};
+    \end{groupplot}
+
+    \begin{axis}[
+        xlabel={Speed},
+        ylabel={Number of particles},
+        x unit = m/s,
+        ybar interval,
+        hist/intervals=true,
+        grid=minor,
+        anchor=north west,
+        hide y axis,
+        hide x axis,
+    ]
+%    \addplot[
+%        domain=0:10,
+%        samples=100,
+%        color=black,
+%        xtick=\empty,
+%        ]
+%        {(2*x/0.1)*exp(-((x)^2)/10)};
+    \end{axis}
+
 \end{tikzpicture}
 
-\begin{tikzpicture}
-\begin{axis}[
-    xlabel={Speed [$m/s^2$]},
-    ylabel={Number of particles},
-    xmin=0,
-    ybar interval=0.5,
-    bar width=2,
-    enlargelimits=1,
-]
-\addplot table[
-    y expr = \thisrow{v_1},
-    ]{../data/task_1_speeds.csv};
-\addlegendentry{Maxwell distribution}
-\end{axis}
-\end{tikzpicture}
 
+%% Task 3
 \begin{tikzpicture}
 \begin{axis}[
     xlabel={Time},
