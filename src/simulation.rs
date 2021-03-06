@@ -23,7 +23,7 @@ pub fn simulate_system(
 
     println!("Running simulation.");
     let (energy, speeds) 
-        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, xi, x_max, y_max, 0.0, false);
+        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, &n_arr, xi, x_max, y_max, 0.0, false);
 
     return (p, energy, speeds);
 }
@@ -35,6 +35,7 @@ pub fn evolve_system(
     number_of_events: usize,
     t_0: f64,
     m_arr: &Array1<f64>,
+    n_arr: &Array1<usize>,
     xi: f64,
     x_max: f64,
     y_max: f64,
@@ -50,10 +51,11 @@ pub fn evolve_system(
     // index 1: kinetic energy at these times
     let mut system_data: Array2<f64> = Array::zeros((2+m_arr.len(), number_of_events));
 
-    // speeds ccontains the speed of each particle
+    // speeds contains the speed of each particle
     // before and after simulation.
-    let mut speeds: Array2<f64> = Array2::zeros((1+m_arr.len(), p.get_len()));
+    let mut speeds: Array2<f64> = Array2::from_elem((1+m_arr.len(), p.get_len()), f64::NAN);
 
+    // Initial speed of all particles.
     for j in 0..p.get_len()
     {
         speeds[[0, j]] = p.get_speed(j);
@@ -97,9 +99,14 @@ pub fn evolve_system(
     }
     print!(" Done.\n");
 
-    for j in 0..p.get_len()
+    let mut k = 0;
+    for i in 0..m_arr.len()
     {
-        speeds[[1, j]] = p.get_speed(j);
+        for j in 0..n_arr[i]
+        {
+            speeds[[i+1, j]] = p.get_speed(k+j);
+        }
+        k += n_arr[i]
     }
 
     return (system_data, speeds);

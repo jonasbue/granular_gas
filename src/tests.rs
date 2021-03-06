@@ -38,7 +38,7 @@ fn test_one_particle()
     println!("Behaving correctly, it should collide with \
     all four walls before returning to it's starting point \
     (x, y) = ({}, {})", 0.5, 0.5);
-    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], xi, x_max, y_max, 0.0, false);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], &array![1], xi, x_max, y_max, 0.0, false);
 
 }
 
@@ -60,7 +60,7 @@ fn test_two_particles()
     println!("Running simulation with two particles.");
     println!("Behaving correctly, thay should collide with \
     each other, then the walls, repeatedly.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], xi, x_max, y_max, 0.0, true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![], &array![1], xi, x_max, y_max, 0.0, true);
 }
 
 
@@ -83,7 +83,7 @@ fn test_collision_angle()
     particles of vastly different size.");
     println!("Behaving correctly, they should collide with \
     each other, then the smaller particle will change direction.");
-    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![1., 1e6], xi, x_max, y_max, 0.0, true);
+    simulation::evolve_system(&mut p, &mut q, 5, 0., &array![1., 1e6], &array![1, 1], xi, x_max, y_max, 0.0, true);
 }
 
 fn test_some_particles()
@@ -103,7 +103,7 @@ fn test_some_particles()
     println!("Running simulation with a small number of particles.");
     println!("Velocity and collision data will be printed.");
     let (energy, _speeds) = simulation::evolve_system(
-        &mut p,&mut q, 5, 0., &array![0.01], xi, x_max, y_max, 0.0, true);
+        &mut p,&mut q, 5, 0., &array![0.01], &array![10], xi, x_max, y_max, 0.0, true);
 
     plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
@@ -129,7 +129,7 @@ fn test_many_particles()
     println!("Running simulation with many particles.");
     println!("Energy should remain constant.");
     let (energy, _speeds) = simulation::evolve_system(
-        &mut p ,&mut q, 500, 0., &array![0.01], xi, x_max, y_max, 0.0, false);
+        &mut p ,&mut q, 500, 0., &array![0.01], &array![100], xi, x_max, y_max, 0.0, false);
 
     //save_data::particles_to_file(&p, "save_test");
     plotting::plot_energy_single_mass(&energy);
@@ -156,7 +156,7 @@ fn test_save_data()
     println!("Running simulation with many particles.");
     println!("Energy should remain constant.");
     let (energy, speeds) = simulation::evolve_system(
-        &mut p ,&mut q, 50, 0., &array![0.01], xi, x_max, y_max, 0.0, false);
+        &mut p ,&mut q, 50, 0., &array![0.01], &array![100], xi, x_max, y_max, 0.0, false);
 
     let filename = "save_test";
     save_data::particles_to_file(&p, filename);

@@ -78,9 +78,9 @@ fn task_3()
         let (p, energy, speeds) 
             = simulation::simulate_system(&n, &r, &m, *xi, x_max, y_max);
 
-        save_data::particles_to_file(&p, &format!("{}{}", "task_3", xi));
-        save_data::speed_to_file(&speeds, &format!("{}{}", &"task_3", xi));
-        save_data::energy_to_file(&energy, &format!("{}{}", &"task_3", xi));
+        save_data::particles_to_file(&p, &format!("{}{}", "task_3_", xi));
+        save_data::speed_to_file(&speeds, &format!("{}{}", &"task_3_", xi));
+        save_data::energy_to_file(&energy, &format!("{}{}", &"task_3_", xi));
         plotting::plot_energy_two_masses(&energy);
         //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
         println!("");
@@ -126,7 +126,7 @@ fn task_4()
 
     plotting::plot_positions(&particles, x_max, 1.0);
     let (energy, speeds) = simulation::evolve_system(&mut particles, &mut q, 
-        max_number_of_events, 0., &m, xi, x_max, y_max, energy_cutoff_fraction, false);
+        max_number_of_events, 0., &m, &n, xi, x_max, y_max, energy_cutoff_fraction, false);
 
     save_data::particles_to_file(&particles, "task_4");
     save_data::speed_to_file(&speeds, "task_4");
