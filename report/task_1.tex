@@ -1,57 +1,69 @@
 %% Task 1
-\begin{tikzpicture}
-    \begin{axis}[
-        xlabel={Speed},
-        ylabel={Number of particles},
-        x unit = m/s,
-        ybar interval,
-        xtick=,
-        xtick distance = 1,
-        xmin=0,
-        xmax=6,
-        ymin=0,
-        grid=minor,
-    ]
-    \addplot+[
-        hist={bins=40},
-        xtick=\empty,
-    ]
-        table[
-            y =v_0,
-        ]{../data/task_1_speeds.csv};
-    \end{axis}
-\end{tikzpicture}
-
-\begin{tikzpicture}
-    \begin{axis}[
-        xlabel={Speed},
-        ylabel={Number of particles},
-        x unit = m/s,
-        ybar interval,
-        hist/intervals=true,
-        ymin=0,
-        xtick=,
-        grid=minor,
-    ]
-    \addplot+[hist={bins=12}]
-        table[
-            y =v_1,
-        ]{../data/task_1_speeds.csv};
-    \end{axis}
-
-    \begin{axis}[
-        xtick=\empty,
-        ytick=\empty,
-    ]
-    \addplot[
-        domain=0:10,
-        samples=100,
-        color=black,
-        xtick=\empty,
+\begin{Figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            title = Initial speed distribution,
+            xlabel={Speed},
+            ylabel={Number of particles},
+            x unit = m/s,
+            ybar interval,
+            xtick=,
+            xtick distance = 1,
+            xmin=0,
+            xmax=6,
+            ymin=0,
+            grid=minor,
         ]
-        {(2*x/0.1)*exp(-((x)^2)/10)};
-    \addlegendentry{Maxwell distribution}
-        % TODO: Calculate <v> and adjust this ad hoc scaling.
-    \end{axis}
-\end{tikzpicture}
+        \addplot+[
+            hist={bins=40},
+            xtick=\empty,
+        ]
+            table[
+                y =v_0,
+            ]{../data/task_1_speeds.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \captionof{figure}{The initial speed distribution of the particles is a Dirac's delta function $\delta(v-1)$.}
+    \label{task_1:init_vel}
+\end{Figure}
+
+\begin{Figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            title = Speed distribution at equilibrium,
+            xlabel={Speed},
+            ylabel={Number of particles},
+            x unit = m/s,
+            ybar interval,
+            hist/intervals=true,
+            ymin=0,
+            xtick=,
+            grid=minor,
+        ]
+        \addplot+[hist={bins=12}]
+            table[
+                y =v_1,
+            ]{../data/task_1_speeds.csv};
+        \end{axis}
+
+        \begin{axis}[
+            xtick=\empty,
+            ytick=\empty,
+        ]
+        \addplot[
+            domain=0:10,
+            samples=100,
+            color=black,
+            xtick=\empty,
+            ]
+            {(2*x/0.1)*exp(-((x)^2)/10)};
+        \addlegendentry{Maxwell distribution}
+            % TODO: Calculate <v> and adjust this ad hoc scaling.
+        \end{axis}
+    \end{tikzpicture}
+    \captionof{figure}{At equilibrium with $\xi = 1.0$, the speed distribution of the particles is a Maxwell distribution.}
+    \label{task_1:final_vel}
+\end{Figure}
 

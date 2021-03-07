@@ -1,61 +1,107 @@
-\begin{tikzpicture}
-    \begin{axis}[
-        xlabel={x},
-        ylabel={y},
-        xtick=,
-        xmin=0,
-        xmax=1,
-        ymin=0,
-        ymax=1,
-        grid=minor,
-    ]
-    \addplot+[
-        scatter,
-        only marks,
-        scatter src=explicit,
-        scatter/use mapped color={
-            draw=black,
-            fill=blue,
-        },
-        visualization depends on=\thisrow{radius}\as\radius,
-        scatter/@pre marker code/.append style={
-            /tikz/mark size=\radius*170
-        }
-    ]
-        table[
-            meta=count,
-        ]{../data/task_4_particles.csv};
-    \end{axis}
-\end{tikzpicture}
+\begin{Figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{groupplot}[
+            group style={
+                group name = task_4,
+                group size = 1 by 2,
+                vertical sep=0pt,
+                xlabels at=edge bottom,
+            },
+            width=\linewidth,
+            height=\linewidth,
+            separate axis lines,
+            xtick distance=0.5,
+            ytick distance=0.5,
+            xmin=0,
+            xmax=1,
+            ymin=0,
+            ymax=1.05,
+            xlabel={x},
+            ylabel={y},
+        ]
+            \nextgroupplot[
+                xticklabels=\empty,
+            ]
+                \addplot+[
+                    scatter,
+                    only marks,
+                    scatter src=explicit,
+                    scatter/use mapped color={
+                        draw=black,
+                        fill=blue,
+                    },
+                    visualization depends on=\thisrow{radius}\as\radius,
+                    scatter/@pre marker code/.append style={
+                        /tikz/mark size=\radius*190
+                    }
+                ]
+                    table[
+                        meta=count,
+                    ]{../data/task_4_initial_particles.csv};
 
+            \nextgroupplot
+                \addplot+[
+                    scatter,
+                    only marks,
+                    scatter src=explicit,
+                    scatter/use mapped color={
+                        draw=black,
+                        fill=blue,
+                    },
+                    visualization depends on=\thisrow{radius}\as\radius,
+                    scatter/@pre marker code/.append style={
+                        /tikz/mark size=\radius*190
+                    }
+                ]
+                    table[
+                        meta=count,
+                    ]{../data/task_4_final_particles.csv};
+            \end{groupplot}
 
-\begin{tikzpicture}
-    \begin{axis}[
-        xlabel={x},
-        ylabel={y},
-        xtick=,
-        xmin=0,
-        xmax=1,
-        ymin=0,
-        ymax=1,
-        grid=minor,
-        colorbar,
-    ]
-    \addplot+[
-        scatter,
-        only marks,
-        scatter src=explicit,
-        scatter/use mapped color={
-            draw=black,
-            fill=mapped color,
-        },
-        visualization depends on=\thisrow{radius}\as\radius,
-        scatter/@pre marker code/.append style={
-            /tikz/mark size=\radius*170
-        }
-    ]
-        table[
-            meta=count,
-        ]{../data/task_4_particles.csv};
-    \end{axis}
-\end{tikzpicture}
+            \begin{axis}[
+                xlabel={x},
+                grid=minor,
+                anchor = north west,
+                hide y axis,
+                hide x axis,
+            ]
+            \end{axis}
+    \end{tikzpicture}
+    \captionof{figure}{The crater formed by a particle colliding with a "wall" of smaller particles.}
+    \label{fig:task_4:before_and_after}
+\end{Figure}
+
+\begin{Figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            xlabel={x},
+            ylabel={y},
+            xtick=,
+            xmin=0,
+            xmax=1,
+            ymin=0,
+            ymax=1,
+            grid=minor,
+            colorbar,
+        ]
+        \addplot+[
+            scatter,
+            only marks,
+            scatter src=explicit,
+            scatter/use mapped color={
+                draw=black,
+                fill=mapped color,
+            },
+            visualization depends on=\thisrow{radius}\as\radius,
+            scatter/@pre marker code/.append style={
+                /tikz/mark size=\radius*170
+            }
+        ]
+            table[
+                meta=count,
+            ]{../data/task_4_particles.csv};
+        \end{axis}
+    \end{tikzpicture}
+\end{Figure}

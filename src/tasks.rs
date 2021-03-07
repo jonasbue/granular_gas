@@ -125,10 +125,12 @@ fn task_4()
     let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
 
     plotting::plot_positions(&particles, x_max, 1.0);
+    save_data::particles_to_file(&particles, "task_4_initial");
+
     let (energy, speeds) = simulation::evolve_system(&mut particles, &mut q, 
         max_number_of_events, 0., &m, &n, xi, x_max, y_max, energy_cutoff_fraction, false);
 
-    save_data::particles_to_file(&particles, "task_4");
+    save_data::particles_to_file(&particles, "task_4_final");
     save_data::speed_to_file(&speeds, "task_4");
     save_data::energy_to_file(&energy, "task_4");
 

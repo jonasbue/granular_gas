@@ -26,12 +26,19 @@ pub fn particles_to_file(p: &particle::Particles, filename: &str)
     let path = Path::new(&path_name);
     let mut f = File::create(&path).expect("Could not open file.");
 
-    write!(f, "x\ty\tv_x\tv_y\tradius\tmass\tcount\n")?;
+    write!(f, "x\ty\tv_x\tv_y\tradius\tmass\tcount\tenergy\n")?;
     for i in 0..p.get_len()
     {
-        for j in 0..7
+        for j in 0..8
         {
-            write!(f, "{:?}\t", data[j][i])?;
+            if j < 7
+            {
+                write!(f, "{:?}\t", data[j][i])?;
+            }
+            else
+            {
+                write!(f, "{:?}\t", p.get_kinetic_energy(i))?;
+            }
         }
         write!(f, "\n");
     }
