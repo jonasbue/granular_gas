@@ -1,0 +1,61 @@
+\begin{tikzpicture}
+    \begin{axis}[
+        xlabel={x},
+        ylabel={y},
+        xtick=,
+        xmin=0,
+        xmax=1,
+        ymin=0,
+        ymax=1,
+        grid=minor,
+    ]
+    \addplot+[
+        scatter,
+        only marks,
+        scatter src=explicit,
+        scatter/use mapped color={
+            draw=black,
+            fill=blue,
+        },
+        visualization depends on=\thisrow{radius}\as\radius,
+        scatter/@pre marker code/.append style={
+            /tikz/mark size=\radius*170
+        }
+    ]
+        table[
+            meta=count,
+        ]{../data/task_4_particles.csv};
+    \end{axis}
+\end{tikzpicture}
+
+
+\begin{tikzpicture}
+    \begin{axis}[
+        xlabel={x},
+        ylabel={y},
+        xtick=,
+        xmin=0,
+        xmax=1,
+        ymin=0,
+        ymax=1,
+        grid=minor,
+        colorbar,
+    ]
+    \addplot+[
+        scatter,
+        only marks,
+        scatter src=explicit,
+        scatter/use mapped color={
+            draw=black,
+            fill=mapped color,
+        },
+        visualization depends on=\thisrow{radius}\as\radius,
+        scatter/@pre marker code/.append style={
+            /tikz/mark size=\radius*170
+        }
+    ]
+        table[
+            meta=count,
+        ]{../data/task_4_particles.csv};
+    \end{axis}
+\end{tikzpicture}

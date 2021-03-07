@@ -74,7 +74,7 @@ pub fn energy_to_file(data: &Array2<f64>, filename: &str)
     let mut f = File::create(&path).expect("Could not open file.");
 
     write!(f, "time\te_tot")?;
-    for i in 0..data.nrows()
+    for i in 0..data.nrows()-1
     {
         write!(f, "\te_{:?}", i)?; 
     }

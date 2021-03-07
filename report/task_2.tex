@@ -1,0 +1,74 @@
+%% Task 2
+\begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Speed},
+        ylabel={Number of particles},
+        x unit = m/s,
+        ybar interval,
+        hist/intervals=true,
+        ymin=0,
+        xtick=,
+        grid=minor,
+    ]
+    \addplot+[hist={bins=12}]
+        table[
+            y = v_1,
+            xtick=\empty,
+        ]{../data/task_2_speeds.csv};
+    \end{axis}
+\end{tikzpicture}
+
+
+\begin{tikzpicture}
+    \begin{groupplot}[
+        group style={
+            group name = task_2,
+            group size=1 by 2,
+            vertical sep=0pt,
+            xlabels at=edge bottom,
+        },
+        height=6cm,
+        width=\linewidth,
+        ybar interval,
+        separate axis lines,
+        xtick=,
+        xmin=0,
+        xmax=4,
+        ymin=0,
+        ymax=40,
+        xlabel={Speed},
+    ]
+    \nextgroupplot
+        \addplot+[hist={bins=16}]
+            table[
+                y = v_1,
+            ]{../data/task_2_speeds.csv};
+    \nextgroupplot[
+        ylabel=Number of particles,
+        every axis y label/.append style={at=(ticklabel cs:1.0)}
+    ]
+        \addplot+[hist={bins=16}]
+            table[
+                y = v_2,
+            ]{../data/task_2_speeds.csv};
+    \end{groupplot}
+    \begin{axis}[
+        xlabel={Speed},
+        ylabel={Number of particles},
+        x unit = m/s,
+        ybar interval,
+        hist/intervals=true,
+        grid=minor,
+        anchor=north west,
+        hide y axis,
+        hide x axis,
+    ]
+%    \addplot[
+%        domain=0:10,
+%        samples=100,
+%        color=black,
+%        xtick=\empty,
+%        ]
+%        {(2*x/0.1)*exp(-((x)^2)/10)};
+    \end{axis}
+\end{tikzpicture}
