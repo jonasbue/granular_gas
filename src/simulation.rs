@@ -23,7 +23,7 @@ pub fn simulate_system(
 
     println!("Running simulation.");
     let (energy, speeds) 
-        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, &n_arr, xi, x_max, y_max, 0.0, false);
+        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, &n_arr, xi, x_max, y_max, 0.0, true, false);
 
     return (p, energy, speeds);
 }
@@ -40,6 +40,7 @@ pub fn evolve_system(
     x_max: f64,
     y_max: f64,
     energy_cutoff_fraction: f64,
+    tc: bool,
     test: bool)
     -> (Array2<f64>, Array2<f64>)
 {
@@ -61,8 +62,9 @@ pub fn evolve_system(
         speeds[[0, j]] = p.get_speed(j);
     }
 
-    println!("Evolving system.");
     let e_i = p.get_tot_kinetic_energy();
+    let mut tc_events: i32 = 0;
+    println!("Evolving system.");
     while i < number_of_events && p.get_tot_kinetic_energy() > e_i*energy_cutoff_fraction
     {
         if !test
@@ -94,12 +96,23 @@ pub fn evolve_system(
             i += 1;
 
             p.propagate(dt);
-            q.resolve_next_collision(&c, &mut p, t, xi, x_max, y_max);
+    
+            // If using TC model, set xi to 1 if dt is small.
+            if tc == true && dt < parameters::TC_DT
+            {
+                q.resolve_next_collision(&c, &mut p, t, 1.0, x_max, y_max);
+                tc_events += 1;
+            }
+            else
+            {
+                q.resolve_next_collision(&c, &mut p, t, xi, x_max, y_max);
+            }
         }
     }
     print!(" Done.\n");
     println!("Quit simulation at {} events, with {:2} % of total energy remaining.",
         i, 100.*p.get_tot_kinetic_energy()/e_i);
+    println!("Number of events that were modeled with xi = 1.0 (TC-model): {}", tc_events);
 
     let mut k = 0;
     for i in 0..m_arr.len()

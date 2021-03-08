@@ -119,27 +119,29 @@ fn task_4()
     save_data::particles_to_file(&particles_init, "task_4_initial");
 
     y_max = 1.0;
-    let xi = 0.5;
+    //let xi = 0.5;
     let v_0 = 3.0;
     let energy_cutoff_fraction = 0.10;
     let max_number_of_events = 500;
 
-    for m_i in [10.0, 1.0, 0.1].iter()
+    for val in [-0.5, 0.5, -1.0].iter()
     {
+        let xi = *val;
+
         let mut particles = particles_init.copy();
         particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -v_0, 0.1, 10.);
 
-        particles.m[wall_amount] = *m_i;
-        let m = array![0.01, *m_i];
+        //particles.m[wall_amount] = *m_i;
+        //let m = array![0.01, *m_i];
 
         let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
 
-        plotting::plot_positions(&particles, x_max, 1.0);
+        //plotting::plot_positions(&particles, x_max, 1.0);
 
         let (energy, speeds) = simulation::evolve_system(&mut particles, &mut q, 
-            max_number_of_events, 0., &m, &n, xi, x_max, y_max, energy_cutoff_fraction, false);
+            max_number_of_events, 0., &m, &n, xi, x_max, y_max, energy_cutoff_fraction, true, false);
 
-        let filename = format!("{}{}", "task_4_final_", v_0);
+        let filename = format!("{}{}", "task_4_final_", val);
 
         save_data::particles_to_file(&particles, &filename);
         save_data::speed_to_file(&speeds, &filename);
