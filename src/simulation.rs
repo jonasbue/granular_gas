@@ -62,8 +62,8 @@ pub fn evolve_system(
     }
 
     println!("Evolving system.");
-    let e_f = p.get_tot_kinetic_energy() * energy_cutoff_fraction;
-    while i < number_of_events && p.get_tot_kinetic_energy() > e_f
+    let e_i = p.get_tot_kinetic_energy();
+    while i < number_of_events && p.get_tot_kinetic_energy() > e_i*energy_cutoff_fraction
     {
         if !test
         {
@@ -98,6 +98,8 @@ pub fn evolve_system(
         }
     }
     print!(" Done.\n");
+    println!("Quit simulation at {} events, with {:2} % of total energy remaining.",
+        i, 100.*p.get_tot_kinetic_energy()/e_i);
 
     let mut k = 0;
     for i in 0..m_arr.len()

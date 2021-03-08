@@ -25,6 +25,19 @@ pub struct Particles
 
 impl Particles
 {
+
+    pub fn copy(&self) -> Particles
+    {
+        Particles
+        {
+            pos: self.pos.to_owned(),
+            vel: self.vel.to_owned(),
+            r: self.r.to_owned(),
+            m: self.m.to_owned(),
+            collision_count: self.collision_count.to_owned(),
+        }
+    }
+
     pub fn get_len(&self) -> usize
     {
         self.r.len()

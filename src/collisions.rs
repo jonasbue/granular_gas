@@ -2,7 +2,6 @@
 //use ndarray::prelude::*;
 
 use crate::particle;
-use crate::parameters;
 
 use std::collections::BinaryHeap;
 use std::cmp::{Ordering, Eq};

@@ -8,9 +8,9 @@ use crate::save_data;
 
 pub fn tasks_main()
 {
-    task_1();
-    task_2();
-    task_3();
+    //task_1();
+    //task_2();
+    //task_3();
     task_4();
 }
 
@@ -110,36 +110,45 @@ fn task_4()
     // work well, even for high packing fractions.
     // If more speed is needed, initiating the 
     // system with a grid and then propagating might be faster.
-    let mut particles = simulation::initiate_system(&n, &r, &m, x_max, y_max);
+    let mut particles_init = simulation::initiate_system(&n, &r, &m, x_max, y_max);
 
     println!("Packing fraction of particles: {}", 
         particle::get_packing_fraction(&n, &r, 0., 0., x_max, y_max));
+    particles_init.stop_all_particles();
+    particles_init.set_particle_state(wall_amount, 0.5, 0.75, 0., -1.0, 0.1, 10.);
+    save_data::particles_to_file(&particles_init, "task_4_initial");
 
     y_max = 1.0;
     let xi = 0.5;
+    let v_0 = 3.0;
     let energy_cutoff_fraction = 0.10;
-    let max_number_of_events = 1000;
+    let max_number_of_events = 500;
 
-    particles.stop_all_particles();
-    particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -5.*parameters::V_0, 0.1, 10.);
-    let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
+    for m_i in [10.0, 1.0, 0.1].iter()
+    {
+        let mut particles = particles_init.copy();
+        particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -v_0, 0.1, 10.);
 
-    plotting::plot_positions(&particles, x_max, 1.0);
-    save_data::particles_to_file(&particles, "task_4_initial");
+        particles.m[wall_amount] = *m_i;
+        let m = array![0.01, *m_i];
 
-    let (energy, speeds) = simulation::evolve_system(&mut particles, &mut q, 
-        max_number_of_events, 0., &m, &n, xi, x_max, y_max, energy_cutoff_fraction, false);
+        let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
 
-    save_data::particles_to_file(&particles, "task_4_final");
-    save_data::speed_to_file(&speeds, "task_4");
-    save_data::energy_to_file(&energy, "task_4");
+        plotting::plot_positions(&particles, x_max, 1.0);
 
-    plotting::plot_positions(&particles, x_max, 1.0);
-    plotting::plot_energy_two_masses(&energy);
-    ////plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
+        let (energy, speeds) = simulation::evolve_system(&mut particles, &mut q, 
+            max_number_of_events, 0., &m, &n, xi, x_max, y_max, energy_cutoff_fraction, false);
 
-    println!("");
+        let filename = format!("{}{}", "task_4_final_", v_0);
 
+        save_data::particles_to_file(&particles, &filename);
+        save_data::speed_to_file(&speeds, &filename);
+        save_data::energy_to_file(&energy, &filename);
+
+        plotting::plot_positions(&particles, x_max, 1.0);
+        plotting::plot_energy_two_masses(&energy);
+        println!("");
+    }
 
 }
 

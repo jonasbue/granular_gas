@@ -4,12 +4,14 @@
         \begin{groupplot}[
             group style={
                 group name = task_4,
-                group size = 1 by 2,
-                vertical sep=0pt,
+                group size = 2 by 2,
+                vertical sep=5pt,
+                horizontal sep=5pt,
                 xlabels at=edge bottom,
+                ylabels at=edge left,
             },
-            width=\linewidth,
-            height=\linewidth,
+            width=0.7\linewidth,
+            height=0.7\linewidth,
             separate axis lines,
             xtick distance=0.5,
             ytick distance=0.5,
@@ -20,6 +22,7 @@
             xlabel={x},
             ylabel={y},
         ]
+
             \nextgroupplot[
                 xticklabels=\empty,
             ]
@@ -33,7 +36,7 @@
                     },
                     visualization depends on=\thisrow{radius}\as\radius,
                     scatter/@pre marker code/.append style={
-                        /tikz/mark size=\radius*190
+                        /tikz/mark size=\radius*50
                     }
                 ]
                     table[
@@ -51,12 +54,48 @@
                     },
                     visualization depends on=\thisrow{radius}\as\radius,
                     scatter/@pre marker code/.append style={
-                        /tikz/mark size=\radius*190
+                        /tikz/mark size=\radius*50
                     }
                 ]
                     table[
                         meta=count,
-                    ]{../data/task_4_final_particles.csv};
+                    ]{../data/task_4_final_10_particles.csv};
+
+            \nextgroupplot
+                \addplot+[
+                    scatter,
+                    only marks,
+                    scatter src=explicit,
+                    scatter/use mapped color={
+                        draw=black,
+                        fill=blue,
+                    },
+                    visualization depends on=\thisrow{radius}\as\radius,
+                    scatter/@pre marker code/.append style={
+                        /tikz/mark size=\radius*50
+                    }
+                ]
+                    table[
+                        meta=count,
+                    ]{../data/task_4_final_1_particles.csv};
+
+            \nextgroupplot
+                \addplot+[
+                    scatter,
+                    only marks,
+                    scatter src=explicit,
+                    scatter/use mapped color={
+                        draw=black,
+                        fill=blue,
+                    },
+                    visualization depends on=\thisrow{radius}\as\radius,
+                    scatter/@pre marker code/.append style={
+                        /tikz/mark size=\radius*50
+                    }
+                ]
+                    table[
+                        meta=count,
+                    ]{../data/task_4_final_0.1_particles.csv};
             \end{groupplot}
 
             \begin{axis}[
@@ -101,7 +140,7 @@
         ]
             table[
                 meta=count,
-            ]{../data/task_4_particles.csv};
+            ]{../data/task_4_final_10_particles.csv};
         \end{axis}
     \end{tikzpicture}
 \end{Figure}

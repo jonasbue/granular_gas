@@ -12,7 +12,7 @@ use crate::particle;
 pub fn particles_to_file(p: &particle::Particles, filename: &str) 
 -> Result<(), Box<dyn Error>>
 {
-    let mut data: Vec<Vec<f64>> = vec![
+    let data: Vec<Vec<f64>> = vec![
         p.pos.row(0).to_vec(),
         p.pos.row(1).to_vec(),
         p.vel.row(0).to_vec(),
@@ -40,7 +40,7 @@ pub fn particles_to_file(p: &particle::Particles, filename: &str)
                 write!(f, "{:?}\t", p.get_kinetic_energy(i))?;
             }
         }
-        write!(f, "\n");
+        write!(f, "\n")?;
     }
     println!("Data saved succesfully to file:\n{}", path_name);
     Ok(())
@@ -66,7 +66,7 @@ pub fn speed_to_file(data: &Array2<f64>, filename: &str)
         {
             write!(f, "{:?}\t", data[[j, i]])?;
         }
-        write!(f, "\n");
+        write!(f, "\n")?;
     }
     println!("Data saved succesfully to file:\n{}", path_name);
     Ok(())
@@ -93,7 +93,7 @@ pub fn energy_to_file(data: &Array2<f64>, filename: &str)
         {
             write!(f, "{:?}\t", data[[j, i]])?;
         }
-        write!(f, "\n");
+        write!(f, "\n")?;
     }
     println!("Data saved succesfully to file:\n{}", path_name);
     Ok(())
@@ -131,5 +131,3 @@ pub fn file_to_particles(filename: &str, n: usize) -> Result<Particles, Box<dyn 
         collision_count: cc_read })
 }
 */
-
-// TODO: Make a file that saves energy and speeds.
