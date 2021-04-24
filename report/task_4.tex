@@ -5,13 +5,13 @@
             group style={
                 group name = task_4,
                 group size = 2 by 2,
-                vertical sep=5pt,
-                horizontal sep=5pt,
+                vertical sep=10pt,
+                horizontal sep=10pt,
                 xlabels at=edge bottom,
                 ylabels at=edge left,
             },
-            width=0.7\linewidth,
-            height=0.7\linewidth,
+            width=0.6\linewidth,
+            height=0.6\linewidth,
             separate axis lines,
             xtick distance=0.5,
             ytick distance=0.5,
@@ -41,7 +41,7 @@
                 ]
                     table[
                         meta=count,
-                    ]{../data/task_4_initial_particles.csv};
+                    ]{../data/task_4_final_-1_particles.csv};
 
             \nextgroupplot
                 \addplot+[
@@ -59,7 +59,25 @@
                 ]
                     table[
                         meta=count,
-                    ]{../data/task_4_final_10_particles.csv};
+                    ]{../data/task_4_final_-0.5_particles.csv};
+
+            \nextgroupplot
+                \addplot+[
+                    scatter,
+                    only marks,
+                    scatter src=explicit,
+                    scatter/use mapped color={
+                        draw=black,
+                        fill=blue,
+                    },
+                    visualization depends on=\thisrow{radius}\as\radius,
+                    scatter/@pre marker code/.append style={
+                        /tikz/mark size=\radius*50
+                    }
+                ]
+                    table[
+                        meta=count,
+                    ]{../data/task_4_final_0.5_particles.csv};
 
             \nextgroupplot
                 \addplot+[
@@ -78,24 +96,6 @@
                     table[
                         meta=count,
                     ]{../data/task_4_final_1_particles.csv};
-
-            \nextgroupplot
-                \addplot+[
-                    scatter,
-                    only marks,
-                    scatter src=explicit,
-                    scatter/use mapped color={
-                        draw=black,
-                        fill=blue,
-                    },
-                    visualization depends on=\thisrow{radius}\as\radius,
-                    scatter/@pre marker code/.append style={
-                        /tikz/mark size=\radius*50
-                    }
-                ]
-                    table[
-                        meta=count,
-                    ]{../data/task_4_final_0.1_particles.csv};
             \end{groupplot}
 
             \begin{axis}[
@@ -143,4 +143,26 @@
             ]{../data/task_4_final_10_particles.csv};
         \end{axis}
     \end{tikzpicture}
+\end{Figure}
+
+\begin{Figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            xlabel={$\xi$},
+            ylabel={Number of moved particles},
+            ymin=0,
+        ]
+        \addplot+[
+            scatter,
+            only marks,
+            scatter/use mapped color={
+                draw=black,
+                fill=mapped color,
+            },
+            ]table{../data/task_4_crater_size.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \captionof{figure}{Number of particles moved from their initial position as a function of the restitution coefficient $\xi$.}
+    \label{fig:task_4:crater_size}
 \end{Figure}

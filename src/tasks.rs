@@ -2,7 +2,6 @@ use ndarray::prelude::*;
 use crate::simulation;
 use crate::plotting;
 use crate::particle;
-use crate::parameters;
 use crate::save_data;
 
 
@@ -122,36 +121,68 @@ fn task_4()
     //let xi = 0.5;
     let v_0 = 3.0;
     let energy_cutoff_fraction = 0.10;
-    let max_number_of_events = 500;
+    let max_number_of_events = 200;
+    let number_of_scans = 10;
+    let mut crater_sizes = Array2::zeros((2, number_of_scans));
+    let mut vals = Array::linspace(-1.0, 1.0, number_of_scans);
 
-    for val in [-0.5, 0.5, -1.0].iter()
+
+    for (i, val) in vals.iter().enumerate()
     {
         let xi = *val;
-
-        let mut particles = particles_init.copy();
-        particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -v_0, 0.1, 10.);
-
         //particles.m[wall_amount] = *m_i;
         //let m = array![0.01, *m_i];
-
+        let mut particles = particles_init.copy();
+        particles.set_particle_state(wall_amount, 0.5, 0.75, 0., -v_0, 0.1, 10.);
         let mut q = simulation::fill_queue(&particles, 0., x_max, y_max);
 
         //plotting::plot_positions(&particles, x_max, 1.0);
-
         let (energy, speeds) = simulation::evolve_system(&mut particles, &mut q, 
             max_number_of_events, 0., &m, &n, xi, x_max, y_max, energy_cutoff_fraction, true, false);
 
+        crater_sizes[[0, i]] = xi;
+        crater_sizes[[1, i]] = get_crater_size(&particles_init, &particles, 0.5);
+
         let filename = format!("{}{}", "task_4_final_", val);
-
-        save_data::particles_to_file(&particles, &filename);
-        save_data::speed_to_file(&speeds, &filename);
-        save_data::energy_to_file(&energy, &filename);
-
-        plotting::plot_positions(&particles, x_max, 1.0);
-        plotting::plot_energy_two_masses(&energy);
+        if val.abs() == -1.0 || val.abs() == 0.5
+        {
+            save_data::particles_to_file(&particles, &filename);
+            save_data::speed_to_file(&speeds, &filename);
+            save_data::energy_to_file(&energy, &filename);
+            //plotting::plot_positions(&particles, x_max, 1.0);
+            //plotting::plot_energy_two_masses(&energy);
+        }
         println!("");
     }
+    save_data::crater_size_to_file(&crater_sizes, "task_4");
 
+}
+
+fn get_crater_size(
+    p_init: &particle::Particles, 
+    p_final: &particle::Particles,
+    r: f64)
+    -> f64
+{
+    let n = p_init.get_len();
+    assert_eq!(n, p_final.get_len());
+
+    let mut d_pos = Array::zeros(n);
+    // Count every particle that has 
+    // moved more than r times it's diameter,
+    // where r is a provided argument.
+    for i in 0..n
+    {
+        if  (p_final.pos[[0, i]] - p_init.pos[[0, i]]).powi(2)
+            + (p_final.pos[[0, i]] - p_init.pos[[0, i]]).powi(2)
+            > (r*2.*p_final.r[i]).powi(2)
+        {
+            d_pos[i] = 1.;
+        }
+    }
+    // Use the number of moved particles as an indicator 
+    // of how many particles that were affected.
+    return d_pos.scalar_sum();
 }
 
 

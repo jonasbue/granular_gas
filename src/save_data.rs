@@ -98,6 +98,29 @@ pub fn energy_to_file(data: &Array2<f64>, filename: &str)
     println!("Data saved succesfully to file:\n{}", path_name);
     Ok(())
 }
+
+pub fn crater_size_to_file(crater_size: &Array2<f64>, filename: &str)
+-> Result<(), Box<dyn Error>>
+{
+    let wd = env::current_dir().unwrap().display().to_string();
+    let path_name = wd + &"/../data/".to_owned() + &filename.to_owned() + "_crater_size.csv";
+    let path = Path::new(&path_name);
+    let mut f = File::create(&path).expect("Could not open file.");
+
+    write!(f, "xi\tsize\n")?;
+    for i in 0..crater_size.ncols()
+    {
+        for j in 0..crater_size.nrows()
+        {
+            write!(f, "{:?}\t", crater_size[[j, i]])?;
+        }
+        write!(f, "\n")?;
+    }
+    println!("Data saved succesfully to file:\n{}", path_name);
+    Ok(())
+}
+
+
 /*
 pub fn file_to_particles(filename: &str, n: usize) -> Result<Particles, Box<dyn Error>>
 {

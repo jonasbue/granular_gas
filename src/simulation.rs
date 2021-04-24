@@ -23,7 +23,7 @@ pub fn simulate_system(
 
     println!("Running simulation.");
     let (energy, speeds) 
-        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, &n_arr, xi, x_max, y_max, 0.0, true, false);
+        = evolve_system(&mut p, &mut q, n, t_0, &m_arr, &n_arr, xi, x_max, y_max, 0.0, false, false);
 
     return (p, energy, speeds);
 }

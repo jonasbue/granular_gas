@@ -8,4 +8,4 @@ pub const V_0: f64 = 1.;
 
 pub const NUMBER_OF_COLLISIONS: usize = 500;
 pub const T_0: f64 = 0.;
-pub const TC_DT: f64 = 1e-4;
+pub const TC_DT: f64 = 1e-5;
