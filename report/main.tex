@@ -1,54 +1,55 @@
-\documentclass{article}
-\usepackage[right=2cm, left=2cm, top=2cm, bottom=2cm]{geometry}
+\documentclass{beamer}
 \usepackage{pgfplots}
-%\pgfplotsset{width=7cm,compat=1.17}\usepgfplotslibrary{statistics}
 \usepgfplotslibrary{units}
 \usepgfplotslibrary{groupplots}
-\pgfplotsset{compat=1.3}
-%\pgfplotsset{every axis/.append style={line width=1pt}}
-%\pgfplotsset{every tick/.append style={thin}}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The following allows combinations of single
-% columns, multicolumn and figures.
-\usepackage{caption}
-\usepackage{multicol}
-\newenvironment{Figure}
-  {\par\medskip\noindent\minipage{\linewidth}}
-  {\endminipage\par\medskip}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepgfplotslibrary{external}
+\tikzexternalize[prefix=figurecache/] 
+\pgfplotsset{compat = 1.17}
 
 \title{Event driven simulation of a granular gas}
 \author{Jonas Bueie}
 \date{\today}
 
 \begin{document}
-\large
-\maketitle
+\frame{\titlepage}
 
-\noindent \hrulefill
-\section*{Abstract}
-
-This report summarizes a computational experiment where a two dimensional granular gas has been simulted in an event driven simulation.
-
-\noindent \hrulefill
-
-\begin{multicols}{2}
-\section{Introduction}
-
-A granular gas is a two dimensional model in which a gas is represented by circular particles of finite radii and masses, that can collide elastically or inellastically.
-In this report, some results from simulations of suh a gas are given.
-The simulations show results that are in agreement with staatistical mechanics.
-
-\section{Theory}
-
-\section{Results}
-%% Include the separate tasks, since the figures make the file long.
+\begin{frame}
+    \vfill
+    \centering
+    \usebeamerfont{title}
+    Task one: Speed distribution 
+    \vfill
+\end{frame}
 \input{task_1.tex}
+
+\begin{frame}
+    \vfill
+    \centering
+    \usebeamerfont{title}
+    Task two: Several gas components 
+    \vfill
+\end{frame}
 \input{task_2.tex}
+
+\begin{frame}
+    \vfill
+    \centering
+    \usebeamerfont{title}
+    Task three: Thermal equilibrium
+    \vfill
+\end{frame}
 \input{task_3.tex}
+
+\begin{frame}
+    \vfill
+    \centering
+    \usebeamerfont{title}
+    Task four: Simulating crater formation 
+    \vfill
+\end{frame}
+
 \input{task_4.tex}
 
-\end{multicols}
 \end{document}
 

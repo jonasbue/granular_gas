@@ -1,17 +1,20 @@
-\begin{Figure}
+\begin{frame}
+\begin{figure}
     \centering
     \begin{tikzpicture}
+        \pgfplotsset{every axis title/.append style={at={(0.5,0.7)}}}
         \begin{groupplot}[
             group style={
                 group name = task_4,
                 group size = 2 by 2,
-                vertical sep=10pt,
-                horizontal sep=10pt,
+                vertical sep=20pt,
+                horizontal sep=30pt,
                 xlabels at=edge bottom,
                 ylabels at=edge left,
             },
-            width=0.6\linewidth,
-            height=0.6\linewidth,
+            title={Parameter sweep},
+            width=0.55\linewidth,
+            height=0.45\linewidth,
             separate axis lines,
             xtick distance=0.5,
             ytick distance=0.5,
@@ -25,6 +28,7 @@
 
             \nextgroupplot[
                 xticklabels=\empty,
+                title={$\xi = 0.00$},
             ]
                 \addplot+[
                     scatter,
@@ -36,14 +40,16 @@
                     },
                     visualization depends on=\thisrow{radius}\as\radius,
                     scatter/@pre marker code/.append style={
-                        /tikz/mark size=\radius*50
+                        /tikz/mark size=\radius*90
                     }
                 ]
                     table[
                         meta=count,
-                    ]{../data/task_4_final_-1_particles.csv};
+                    ]{../data/task_4_final_0.00_particles.csv};
 
-            \nextgroupplot
+            \nextgroupplot[
+                title={$\xi = 0.25$},
+            ]
                 \addplot+[
                     scatter,
                     only marks,
@@ -54,14 +60,16 @@
                     },
                     visualization depends on=\thisrow{radius}\as\radius,
                     scatter/@pre marker code/.append style={
-                        /tikz/mark size=\radius*50
+                        /tikz/mark size=\radius*90
                     }
                 ]
                     table[
                         meta=count,
-                    ]{../data/task_4_final_-0.5_particles.csv};
+                    ]{../data/task_4_final_0.25_particles.csv};
 
-            \nextgroupplot
+            \nextgroupplot[
+                title={$\xi = 0.50$},
+            ]
                 \addplot+[
                     scatter,
                     only marks,
@@ -72,14 +80,16 @@
                     },
                     visualization depends on=\thisrow{radius}\as\radius,
                     scatter/@pre marker code/.append style={
-                        /tikz/mark size=\radius*50
+                        /tikz/mark size=\radius*90
                     }
                 ]
                     table[
                         meta=count,
-                    ]{../data/task_4_final_0.5_particles.csv};
+                    ]{../data/task_4_final_0.50_particles.csv};
 
-            \nextgroupplot
+            \nextgroupplot[
+                title={$\xi = 0.75$},
+            ]
                 \addplot+[
                     scatter,
                     only marks,
@@ -90,12 +100,12 @@
                     },
                     visualization depends on=\thisrow{radius}\as\radius,
                     scatter/@pre marker code/.append style={
-                        /tikz/mark size=\radius*50
+                        /tikz/mark size=\radius*90
                     }
                 ]
                     table[
                         meta=count,
-                    ]{../data/task_4_final_1_particles.csv};
+                    ]{../data/task_4_final_0.75_particles.csv};
             \end{groupplot}
 
             \begin{axis}[
@@ -107,14 +117,17 @@
             ]
             \end{axis}
     \end{tikzpicture}
-    \captionof{figure}{The crater formed by a particle colliding with a "wall" of smaller particles.}
-    \label{fig:task_4:before_and_after}
-\end{Figure}
+    %\captionof{figure}{The crater formed by a particle colliding with a "wall" of smaller particles.}
+    %\label{fig:task_4:before_and_after}
+\end{figure}
+\end{frame}
 
-\begin{Figure}
+\begin{frame}
+\begin{figure}
     \centering
     \begin{tikzpicture}
         \begin{axis}[
+            title={$\xi = 1.00$},
             xlabel={x},
             ylabel={y},
             xtick=,
@@ -123,7 +136,7 @@
             ymin=0,
             ymax=1,
             grid=minor,
-            colorbar,
+            %colorbar,
         ]
         \addplot+[
             scatter,
@@ -131,7 +144,7 @@
             scatter src=explicit,
             scatter/use mapped color={
                 draw=black,
-                fill=mapped color,
+                fill=blue,
             },
             visualization depends on=\thisrow{radius}\as\radius,
             scatter/@pre marker code/.append style={
@@ -140,29 +153,31 @@
         ]
             table[
                 meta=count,
-            ]{../data/task_4_final_10_particles.csv};
+            ]{../data/task_4_final_1.00_particles.csv};
         \end{axis}
     \end{tikzpicture}
-\end{Figure}
+\end{figure}
+\end{frame}
 
-\begin{Figure}
+\begin{frame}
+\begin{figure}
     \centering
     \begin{tikzpicture}
         \begin{axis}[
             xlabel={$\xi$},
-            ylabel={Number of moved particles},
+            ylabel={Crater size},
+            y unit ={\%},
             ymin=0,
         ]
-        \addplot+[
-            scatter,
-            only marks,
-            scatter/use mapped color={
-                draw=black,
-                fill=mapped color,
-            },
-            ]table{../data/task_4_crater_size.csv};
+        \addplot[
+            color=black,
+            mark=square*,
+            ] table[
+            y expr = {\thisrow{size} / 18},
+            ]{../data/task_4_crater_size.csv};
         \end{axis}
     \end{tikzpicture}
-    \captionof{figure}{Number of particles moved from their initial position as a function of the restitution coefficient $\xi$.}
-    \label{fig:task_4:crater_size}
-\end{Figure}
+    %\captionof{figure}{Number of particles moved from their initial position as a function of the restitution coefficient $\xi$.}
+    %\label{fig:task_4:crater_size}
+\end{figure}
+\end{frame}

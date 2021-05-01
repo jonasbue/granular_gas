@@ -10,14 +10,15 @@ pub fn tasks_main()
     //task_1();
     //task_2();
     //task_3();
-    task_4();
+    //Task 4 is done, I think.
+    ////task_4();
 }
 
 fn task_1() 
 {
-    let n: Array1<usize> = array![100];
-    let r: Array1<f64> = array![0.01];
-    let m: Array1<f64> = array![1.];
+    let n: Array1<usize> = array![5000];
+    let r: Array1<f64> = array![0.001];
+    let m: Array1<f64> = array![0.001];
 
     let xi = 1.0;
     let x_max = 1.0;
@@ -29,7 +30,7 @@ fn task_1()
     save_data::speed_to_file(&speeds, "task_1");
     save_data::energy_to_file(&energy, "task_1");
 
-    plotting::plot_energy_single_mass(&energy);
+    //plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
     println!("");
 
@@ -38,7 +39,7 @@ fn task_1()
 
 fn task_2() 
 {
-    let n: Array1<usize> = array![100, 100];
+    let n: Array1<usize> = array![2000, 2000];
     let r: Array1<f64> = array![0.01, 0.01];
     let m: Array1<f64> = array![1., 4.];
 
@@ -52,7 +53,7 @@ fn task_2()
     save_data::speed_to_file(&speeds, "task_2");
     save_data::energy_to_file(&energy, "task_2");
 
-    plotting::plot_energy_single_mass(&energy);
+    //plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
     println!("");
 }
@@ -64,7 +65,7 @@ fn task_2()
 // The average number is known before start.
 fn task_3() 
 {
-    let n: Array1<usize> = array![100, 100];
+    let n: Array1<usize> = array![10000, 10000];
     let r: Array1<f64> = array![0.01, 0.01];
     let m: Array1<f64> = array![1., 4.];
     let x_max = 1.0;
@@ -80,7 +81,7 @@ fn task_3()
         save_data::particles_to_file(&p, &format!("{}{}", "task_3_", xi));
         save_data::speed_to_file(&speeds, &format!("{}{}", &"task_3_", xi));
         save_data::energy_to_file(&energy, &format!("{}{}", &"task_3_", xi));
-        plotting::plot_energy_two_masses(&energy);
+        //plotting::plot_energy_two_masses(&energy);
         //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
         println!("");
     }
@@ -94,13 +95,13 @@ fn task_4()
     let mut y_max = 0.5;
 
     // A particle with radius 0 will never collide with other particles.
-    let wall_amount: usize = 450;
-    let wall_radius = 0.01;
+    let wall_amount: usize = 1800;
+    let wall_radius = 0.005;
 
-    let projectile_mass: f64 = 10.;
+    let projectile_mass: f64 = 2.5;
     let n: Array1<usize> = array![wall_amount, 1];
     let r: Array1<f64> = array![wall_radius, 0.0];
-    let m: Array1<f64> = array![0.01, projectile_mass];
+    let m: Array1<f64> = array![0.1, projectile_mass];
 
 
     print_task_info(4, &n, &r, &m);
@@ -114,22 +115,25 @@ fn task_4()
     println!("Packing fraction of particles: {}", 
         particle::get_packing_fraction(&n, &r, 0., 0., x_max, y_max));
     particles_init.stop_all_particles();
-    particles_init.set_particle_state(wall_amount, 0.5, 0.75, 0., -1.0, 0.1, 10.);
+    particles_init.set_particle_state(wall_amount, 0.5, 0.75, 0., -5.0, 0.125, projectile_mass);
     save_data::particles_to_file(&particles_init, "task_4_initial");
 
     y_max = 1.0;
     //let xi = 0.5;
     let v_0 = 3.0;
     let energy_cutoff_fraction = 0.10;
-    let max_number_of_events = 200;
-    let number_of_scans = 10;
+    let max_number_of_events = 10000;
+    let number_of_scans = 4;
     let mut crater_sizes = Array2::zeros((2, number_of_scans));
-    let mut vals = Array::linspace(-1.0, 1.0, number_of_scans);
+    let mut vals = Array::linspace(0.01, 0.07, number_of_scans);
 
 
     for (i, val) in vals.iter().enumerate()
     {
+        // Here, set the correct value (xi, v_0, m_i) to be 
+        // equal to val, in order to do the parameter sweep.
         let xi = *val;
+        println!("xi = {:.3}", val);
         //particles.m[wall_amount] = *m_i;
         //let m = array![0.01, *m_i];
         let mut particles = particles_init.copy();
@@ -143,18 +147,18 @@ fn task_4()
         crater_sizes[[0, i]] = xi;
         crater_sizes[[1, i]] = get_crater_size(&particles_init, &particles, 0.5);
 
-        let filename = format!("{}{}", "task_4_final_", val);
-        if val.abs() == -1.0 || val.abs() == 0.5
-        {
-            save_data::particles_to_file(&particles, &filename);
-            save_data::speed_to_file(&speeds, &filename);
-            save_data::energy_to_file(&energy, &filename);
-            //plotting::plot_positions(&particles, x_max, 1.0);
-            //plotting::plot_energy_two_masses(&energy);
-        }
+        //if i == 0 || i == 3 || i == 6 || i == 9 || i == 12
+        //{
+        //    let filename = format!("{}{:.2}", "task_4_final_", val);
+        //    save_data::particles_to_file(&particles, &filename);
+        //    save_data::speed_to_file(&speeds, &filename);
+        //    save_data::energy_to_file(&energy, &filename);
+        //    //plotting::plot_positions(&particles, x_max, 1.0);
+        //    //plotting::plot_energy_two_masses(&energy);
+        //}
         println!("");
     }
-    save_data::crater_size_to_file(&crater_sizes, "task_4");
+    save_data::crater_size_to_file(&crater_sizes, "task_4_low");
 
 }
 
