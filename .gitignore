@@ -7,5 +7,4 @@
 *.snm
 *.auxlock
 *.toc
-data/*
 report/figurecache/*
