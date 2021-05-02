@@ -11,6 +11,7 @@ pub fn simulate_system(
     n_arr: &Array1<usize>, 
     r_arr: &Array1<f64>, 
     m_arr: &Array1<f64>, 
+    //n: usize,
     xi: f64, 
     x_max: f64, 
     y_max: f64)
@@ -147,6 +148,7 @@ pub fn fill_queue(p: &particle::Particles, t_0: f64, x_max: f64, y_max: f64)
     -> collisions::CollisionQueue
 {
     let mut q = collisions::CollisionQueue::new();
+    println!("Filling collision queue.");
     q.fill_collision_queue(&p, t_0, x_max, y_max);
 
     println!("Queue filled successfully.");

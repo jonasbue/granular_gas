@@ -2,6 +2,7 @@
 //use ndarray::prelude::*;
 
 use crate::particle;
+use crate::simulation::status_bar;
 
 use std::collections::BinaryHeap;
 use std::cmp::{Ordering, Eq};
@@ -173,6 +174,7 @@ impl CollisionQueue
     {
         for i in 0..particles.get_len()
         {
+            status_bar(i, particles.get_len());
             self.add_new_collisions(particles, i, t_0, x_max, y_max);
         }
     }

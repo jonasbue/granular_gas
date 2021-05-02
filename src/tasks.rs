@@ -8,15 +8,15 @@ use crate::save_data;
 pub fn tasks_main()
 {
     //task_1();
-    //task_2();
-    //task_3();
+    task_2();
+    task_3();
     //Task 4 is done, I think.
     ////task_4();
 }
 
 fn task_1() 
 {
-    let n: Array1<usize> = array![5000];
+    let n: Array1<usize> = array![4000];
     let r: Array1<f64> = array![0.001];
     let m: Array1<f64> = array![0.001];
 
@@ -24,11 +24,15 @@ fn task_1()
     let x_max = 1.0;
     let y_max = 1.0;
     print_task_info(1, &n, &r, &m);
-    let (p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
+    println!("Packing fraction of particles: {}", 
+        particle::get_packing_fraction(&n, &r, 0., 0., x_max, y_max));
+    
+    let (p, energy, speeds) = simulation::simulate_system(&n, &r, &m, 
+        xi, x_max, y_max);
 
-    save_data::particles_to_file(&p, "task_1");
-    save_data::speed_to_file(&speeds, "task_1");
-    save_data::energy_to_file(&energy, "task_1");
+    save_data::particles_to_file(&p, "task_1_final");
+    save_data::speed_to_file(&speeds, "task_1_final");
+    save_data::energy_to_file(&energy, "task_1_final");
 
     //plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
@@ -40,8 +44,8 @@ fn task_1()
 fn task_2() 
 {
     let n: Array1<usize> = array![2000, 2000];
-    let r: Array1<f64> = array![0.01, 0.01];
-    let m: Array1<f64> = array![1., 4.];
+    let r: Array1<f64> = array![0.001, 0.002];
+    let m: Array1<f64> = array![0.001, 0.004];
 
     let xi = 1.0;
     let x_max = 1.0;
@@ -49,9 +53,9 @@ fn task_2()
     print_task_info(2, &n, &r, &m);
     let (p, energy, speeds) = simulation::simulate_system(&n, &r, &m, xi, x_max, y_max);
 
-    save_data::particles_to_file(&p, "task_2");
-    save_data::speed_to_file(&speeds, "task_2");
-    save_data::energy_to_file(&energy, "task_2");
+    save_data::particles_to_file(&p, "task_2_diff_r");
+    save_data::speed_to_file(&speeds, "task_2_diff_r");
+    save_data::energy_to_file(&energy, "task_2_diff_r");
 
     //plotting::plot_energy_single_mass(&energy);
     //plotting::plot_stats(speeds.slice(s![0,..]), speeds.slice(s![1,..]));
@@ -65,9 +69,9 @@ fn task_2()
 // The average number is known before start.
 fn task_3() 
 {
-    let n: Array1<usize> = array![10000, 10000];
-    let r: Array1<f64> = array![0.01, 0.01];
-    let m: Array1<f64> = array![1., 4.];
+    let n: Array1<usize> = array![1000, 1000];
+    let r: Array1<f64> = array![0.001, 0.002];
+    let m: Array1<f64> = array![0.001, 0.004];
     let x_max = 1.0;
     let y_max = 1.0;
     print_task_info(3, &n, &r, &m);
@@ -115,7 +119,7 @@ fn task_4()
     println!("Packing fraction of particles: {}", 
         particle::get_packing_fraction(&n, &r, 0., 0., x_max, y_max));
     particles_init.stop_all_particles();
-    particles_init.set_particle_state(wall_amount, 0.5, 0.75, 0., -5.0, 0.125, projectile_mass);
+    particles_init.set_particle_state(wall_amount, 0.5, 0.75, 0., -5.0, 0.025, projectile_mass);
     save_data::particles_to_file(&particles_init, "task_4_initial");
 
     y_max = 1.0;
